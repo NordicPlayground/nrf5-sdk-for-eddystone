@@ -1,0 +1,18 @@
+The nRF52 Eddystone SDK licensing is split between the portion of the source code that
+originates from Nordic Semiconductor ASA and the
+portion that originates from third-parties.
+
+* All source code contained under the following folders originates from Nordic
+  Semiconductor and is covered by the license present 
+  in documentation/license.txt in the nRF5 SDK:
+
+    - which
+    - folders
+    - go
+    - here
+
+* All source code contained under the following folder originates from third
+  parties, and is covered by the corresponding licenses found in each of their
+  respective subfolders:
+
+    - crypto_libs
