@@ -4,8 +4,7 @@ This is an example implementation of the Eddystone Configuration Service for nRF
 
 This application is intended to be used together with the open source **nRF Beacon for Eddystone** Android App.
 
-
-![Eddystone logo][eddystone-logo]
+<img src="https://github.com/google/eddystone/blob/master/branding/assets/png/EddyStone_final-01.png" alt="Eddystone logo" width="300px">
  ---
 #### Table of contents
 * [Introduction](#introduction)
@@ -120,5 +119,3 @@ portion that originates from third-parties.
     - crypto_libs
 
 * The crypto_libs folder is created by running the crypto_libs.bat program.
-
-[eddystone-logo]: https://github.com/google/eddystone/blob/master/branding/assets/png/EddyStone_final-01.png
