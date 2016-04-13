@@ -3,6 +3,8 @@
 This is an example implementation of the Eddystone Configuration Service for nRF52. Support for nRF51 is scheduled for a future release. It is recommended to read the [official specification](https://github.com/google/eddystone) for Eddystone, an open beacon format from Google.
 
 This application is intended to be used together with the open source **nRF Beacon for Eddystone** Android App.
+
+
 ![Eddystone logo][eddystone-logo]
  ---
 #### Table of contents
@@ -67,14 +69,18 @@ The application might work with other versions of the SDK but some modification 
 1. Download the nRF5 SDK 11 and extract to a suitable location. On Windows we recommend placing it close to (C:) to avoid long folder and file name problems.
 2. Download and extract this repository
 3. Copy the nrf5_eddystone_sdk folder and place it next to the other folders in the nRF5 SDK 11 ble_peripheral folder.
+
 ## How to use
 After flashing the firmware to a nRF52 DK it will automatically start broadcasting a Eddystone-URL pointing to this repository. In order to configure the beacon to broadcast a different URL or a different frame type it is necessary to put the DK in configuration mode and write the Lock Key to the Unlock Characteristic. Download and install the
 
+Roshan goes here
 
 
 ## How it works
+Tony goes here
 
 ## Documentation
+This is it.
 
 ## Issues and support
 This example application is provided as a source code foundation for beacon providers or for users simply wanting to experiment with Eddystone. It is not part of the official nRF SDK and support is therefore limited. Expect limited follow-up of issues.
