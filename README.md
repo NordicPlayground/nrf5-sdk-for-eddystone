@@ -4,7 +4,7 @@ This is an example implementation of the Eddystone GATT Configuration Service fo
 
 This application is intended to be used together with the open source **nRF Beacon for Eddystone** Android App.
 
-<img src="https://github.com/google/eddystone/blob/master/branding/assets/png/EddyStone_final-02.png" alt="Eddystone logo" width="200px">
+<img src="https://github.com/google/eddystone/blob/master/branding/assets/png/EddyStone_final-02.png" alt="Eddystone logo" width="150px">
  ---
 #### Table of contents
 * [Introduction](#introduction)
@@ -91,6 +91,7 @@ The application might work with other versions of the SDK but some modification 
 ## How to install
 #### Quick Start
 This is the recommended approach if you just want to get started quickly without building the project yourself.
+
 1. Connect the nRF52 DK to your computer. It will show up as a JLINK drive.
 2. Download the some_name.hex file in the hex folder in this repository.
 3. Drag and drop the .hex file to the JLINK drive to flash the nRF52 DK.
