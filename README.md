@@ -20,12 +20,47 @@ This application is intended to be used together with the open source **nRF Beac
 * [License](#license)
 
 ## Introduction
-The application supports all Eddystone frame types:
-* URL
-* UID
-* EID
-* TLM
-* eTLM
+The new Eddystone GATT Configuration Service enables simple configuration of beacons. The user can configure the beacon to broadcast all Eddystone frame types:
+* Eddystone-URL
+* Eddystone-UID
+* Eddystone-EID
+* Eddystone-TLM
+* Eddystone-eTLM
+
+Each frame type is given a dedicated slot and it is possible to set unique advertising intervals for each slot.
+
+This means that a beacon can send a Eddystone-URL every two seconds and a Eddystone-UID every second or any other combination. The current firmware has a lower limit of 100ms for advertising interval. It will be up to the user or developer to choose values that best fit with the use case and desired power consumption.
+
+In addition to the new Eddystone GATT Configuration Service there are also two new frame types aimed at secure use cases.
+
+The new frame types are **Eddystone-EID** and **Eddystone-eTLM**. EID, or Ephemeral Identifier, is a secure version of UID. eTLM, or encrypted TLM, is a secure telemetry format and provides information on the health of a beacon.
+
+**Eddystone-EID** and **Eddystone-eTLM** protect against the following security issues which are known beacon vulnerabilities.
+
+#### Spoofing
+Beacon spoofing is pretending to be a beacon. With regular beacons it is possible for someone to hijack the advertising data, which is always the same, and connect it to their own app. This could for instance enable an app for company A to serve information when a user is near a beacon for company B.
+
+This is impossible with Eddystone-EID since the advertising data is encrypted and regularly updated.
+
+#### Replay Attacks
+If a beacon is unlocked with a fixed value it is possible to listen to the radio communication between a phone and a beacon and record the unlock value. A malicious user could now replay this unlock value to the beacon and gain configuration access.
+
+By randomizing and never sending the Unlock Key in clear text it is impossible to perform replay attacks with the new Eddystone GATT Configuration Service. The beacon creates a random challenge token every time a user tries to unlock it. The user then encrypts the Lock Key with the challenge token and sends the result to the beacon. The result will be different for every unlock and replay attacks are therefore impossible.
+
+Unauthorized authentication
+Unauthorized authentication could allow someone to connect to and configure a beacon. This way company A could simply reconfigure a beacon owned by company B to advertise company A data.
+
+The new Eddystone GATT Configuration Service is locked down by default. In order to configure the beacon a user must write a Lock Key to the Unlock Characteristic. The Lock Key is unique to each beacon and it will not be possible to remotely reconfigure the beacon without the Lock Key. Note that the Lock Key is encrypted with a random challenge token before it is sent.
+
+#### Malicious Asset Tracking
+If a beacon is attached to a bus it could be possible to track the location of the beacon and therefore the bus. This is especially true if the beacon is always advertising the same data.
+
+Eddystone-EID randomizes the device ID of the beacon as well as the encrypted advertising data. Since there are no constant values to track it will be difficult if not impossible to track the location of a single beacon over any significant time period.
+
+> **IMPORTANT:**
+A beacon should only be configured as Eddystone-EID and Eddystone-eTLM slots in order to have all the security benefits. A beacon configured as both Eddystone-EID and Eddystone-UID would still be vulnerable to tracking.
+
+
 
 ## Supported characteristics
 The application supports all functionality of the Eddystone Configuration Service except the advanced optional characteristics as displayed in the table below.
