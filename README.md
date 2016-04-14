@@ -1,10 +1,8 @@
 # nRF5 SDK for Eddystone™
 
-This is an example implementation of the Eddystone GATT Configuration Service for nRF52. Support for nRF51 is scheduled for a future release. It is recommended to read the [official specification](https://github.com/google/eddystone) for Eddystone, an open beacon format from Google.
+This is an example implementation of the Eddystone GATT Configuration Service for nRF52. Support for nRF51 is scheduled for a future release. The application is intended to be used together with the open source [nRF Beacon for Eddystone](https://github.com/NordicSemiconductor/Android-nRF-Beacon-for-Eddystone) Android App. It is recommended to read the [official specification](https://github.com/google/eddystone) for Eddystone, an open beacon format from Google to get a thorough understanding. Go to [Quick start](#quick-start) if you want to experiment right away.
 
-This application is intended to be used together with the open source **nRF Beacon for Eddystone** Android App.
-
-<img src="https://github.com/google/eddystone/blob/master/branding/assets/png/EddyStone_final-02.png" alt="Eddystone logo" width="150px">
+<img src="https://github.com/google/eddystone/blob/master/branding/assets/png/EddyStone_final-02.png" alt="Eddystone logo" width="120px" align="middle">
  ---
 #### Table of contents
 * [Introduction](#introduction)
@@ -58,12 +56,11 @@ Eddystone-EID randomizes the device ID of the beacon as well as the encrypted ad
 A beacon should only be configured as Eddystone-EID and Eddystone-eTLM slots in order to have all the security benefits. A beacon configured as both Eddystone-EID and Eddystone-UID would still be vulnerable to tracking.
 
 
-
 ## Supported characteristics
-The application supports all functionality of the Eddystone Configuration Service except the advanced optional characteristics as displayed in the table below.
+The application supports all functionality of the Eddystone GATT Configuration Service except the advanced optional characteristics as displayed in the table below.
 
 Characteristic | Name | Status
----:|---|---
+---:|---|:---:
 1 | Broadcast Capabilities | :white_check_mark:
 2 | Active Slot | :white_check_mark:
 3 | Advertising Interval | :white_check_mark:
@@ -92,23 +89,46 @@ The application might work with other versions of the SDK but some modification 
 #### Quick Start
 This is the recommended approach if you just want to get started quickly without building the project yourself.
 
-1. Connect the nRF52 DK to your computer. It will show up as a JLINK drive.
-2. Download the some_name.hex file in the hex folder in this repository.
-3. Drag and drop the .hex file to the JLINK drive to flash the nRF52 DK.
-4. Install the nRF Beacon for Eddystone Android app from Play Store.
-5. Follow the instructions in [How to use](#how-to-use)
+1. Connect the nRF52 DK to your computer. It will show up as a JLINK USB drive.
+
+2. Download the `nrf5_sdk_for_eddystone.hex` file in the hex folder in this repository.
+
+3. Drag and drop the `nrf5_sdk_for_eddystone.hex` file on the JLINK drive to automatically program the nRF52 DK.
+
+4. Install the nRF Beacon for Eddystone Android App from [Play Store](https://play.google.com/store/apps/details?id=no.nordicsemi.android.nrfbeacon.nearby).
+
+5. Follow the [instructions on how to use the App](https://github.com/NordicSemiconductor/Android-nRF-Beacon-for-Eddystone).
 
 #### Compile from source
-1. Download the nRF5 SDK 11 and extract to a suitable location. On Windows we recommend placing it close to (C:) to avoid long folder and file name problems.
-2. Download and extract this repository
-3. Copy the nrf5_eddystone_sdk folder and place it next to the other folders in the nRF5 SDK 11 ble_peripheral folder.
-4. More to come...
+1. Download the [nRF5 Software Development Kit v11](http://developer.nordicsemi.com/nRF5_SDK/nRF5_SDK_v11.x.x/) and extract to a suitable location. We recommend placing it close to root to avoid problems related to long folder and file names.
+
+2. Clone this repository
+```
+git clone https://github.com/NordicSemiconductor/nrf5-sdk-for-eddystone.git
+```
+
+3. Copy the `nrf5_sdk_for_eddystone` folder and place it next to the other folders in the nRF5 SDK v11 `ble_peripheral folder`.
+```
+examples
+        ble_peripheral
+                ble_app_alert_notification
+                ble_app_ancs_c
+                ble_app_beacon
+                ....
+                nrf_sdk_for_eddystone
+```
+
+4. Run the script to clone and configure third-party cryptographic libraries.
+```
+>> crypto_setup.bat (windows)
+or
+>> crypto_setup.sh (linux)
+```
 
 ## How to use
-After flashing the firmware to a nRF52 DK it will automatically start broadcasting a Eddystone-URL pointing to this repository. In order to configure the beacon to broadcast a different URL or a different frame type it is necessary to put the DK in configuration mode and write the Lock Key to the Unlock Characteristic. Download and install the
+After flashing the firmware to a nRF52 DK it will automatically start broadcasting a Eddystone-URL pointing to http://www.nordicsemi.com. In order to configure the beacon to broadcast a different URL or a different frame type it is necessary to put the DK in configuration mode and write the Lock Key to the Unlock Characteristic. This is done by using the nRF Beacon for Eddystone App.
 
-Roshan goes here
-
+Detailed instructions on how to use the App is available in the [nRF Beacon for Eddystone GitHub repository](https://github.com/NordicSemiconductor/Android-nRF-Beacon-for-Eddystone).
 
 ## How it works
 Tony goes here
