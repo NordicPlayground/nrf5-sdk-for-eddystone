@@ -1,13 +1,14 @@
 # nRF5 SDK for Eddystone™
 
+<img src="https://github.com/google/eddystone/blob/master/branding/assets/png/EddyStone_final-01.png" alt="Eddystone logo" width="300px" align="middle">
+
 This is an example implementation of the Eddystone GATT Configuration Service for nRF52. Support for nRF51 is scheduled for a future release. The application is intended to be used together with the open source [nRF Beacon for Eddystone](https://github.com/NordicSemiconductor/Android-nRF-Beacon-for-Eddystone) Android App. It is recommended to read the [official specification](https://github.com/google/eddystone) for Eddystone, an open beacon format from Google to get a thorough understanding. Go to [Quick start](#quick-start) if you want to experiment right away.
 
-<img src="https://github.com/google/eddystone/blob/master/branding/assets/png/EddyStone_final-02.png" alt="Eddystone logo" width="120px" align="middle">
- ---
 #### Table of contents
 * [Introduction](#introduction)
 * [Supported characteristics](#supported-characteristics)
 * [Requirements](#requirements)
+* [Known issues](#known-issues)
 * [How to install](#how-to-install)
 * [How to use](#how-to-use)
 * [How it works](#how-it-works)
@@ -33,24 +34,13 @@ The new frame types are **Eddystone-EID** and **Eddystone-eTLM**. EID, or Epheme
 Eddystone-EID and Eddystone-eTLM protect against spoofing, replay attacks and malicious asset tracking - which are known beacon vulnerabilities.
 
 #### Spoofing
-Beacon spoofing is pretending to be a beacon. With regular beacons it is possible for someone to hijack the advertising data, which is always the same, and connect it to their own app. This could for instance enable an app for company A to serve information when a user is near a beacon for company B.
-
-This is impossible with Eddystone-EID since the advertising data is encrypted and regularly updated.
+Impersonating Eddystone-EIDs is difficult since the advertising data is encrypted and regularly updated.
 
 #### Replay Attacks
-If a beacon is unlocked with a fixed value it is possible to listen to the radio communication between a phone and a beacon and record the unlock value. A malicious user could now replay this unlock value to the beacon and gain configuration access.
-
-By randomizing and never sending the Unlock Key in clear text it is impossible to perform replay attacks with the new Eddystone GATT Configuration Service. The beacon creates a random challenge token every time a user tries to unlock it. The user then encrypts the Lock Key with the challenge token and sends the result to the beacon. The result will be different for every unlock and replay attacks are therefore impossible.
-
-Unauthorized authentication
-Unauthorized authentication could allow someone to connect to and configure a beacon. This way company A could simply reconfigure a beacon owned by company B to advertise company A data.
-
-The new Eddystone GATT Configuration Service is locked down by default. In order to configure the beacon a user must write a Lock Key to the Unlock Characteristic. The Lock Key is unique to each beacon and it will not be possible to remotely reconfigure the beacon without the Lock Key. Note that the Lock Key is encrypted with a random challenge token before it is sent.
+By randomizing and never sending the Unlock Key in clear text it is difficult to perform replay attacks with the new Eddystone GATT Configuration Service. The beacon creates a random challenge token every time a user tries to unlock it. The user then encrypts the Lock Key with the challenge token and sends the result to the beacon. The result will be different for every unlock and replay attacks are therefore impossible.
 
 #### Malicious Asset Tracking
-If a beacon is attached to a bus it could be possible to track the location of the beacon and therefore the bus. This is especially true if the beacon is always advertising the same data.
-
-Eddystone-EID randomizes the device ID of the beacon as well as the encrypted advertising data. Since there are no constant values to track it will be difficult if not impossible to track the location of a single beacon over any significant time period.
+Eddystone-EIDs randomize the device ID of the beacon as well as the encrypted advertising data. Since there are no constant values to track it will be difficult if not impossible to track the location of a single beacon over any significant time period.
 
 > **IMPORTANT**
 A beacon should only be configured as Eddystone-EID and Eddystone-eTLM slots in order to have all the security benefits. A beacon configured as both Eddystone-EID and Eddystone-UID would still be vulnerable to tracking.
@@ -85,8 +75,11 @@ The application might work with other versions of the SDK but some modification 
 #### Hardware
 * [nRF52 Development Kit](https://octopart.com/nrf52-dk-nordic+semiconductor-67145952)
 
+## Known issues
+
+
 ## How to install
-#### Quick Start
+#### Quick start
 This is the recommended approach if you just want to get started quickly without building the project yourself.
 
 1. Connect the nRF52 DK to your computer. It will show up as a JLINK USB drive.
@@ -106,7 +99,6 @@ This is the recommended approach if you just want to get started quickly without
 ```
 git clone https://github.com/NordicSemiconductor/nrf5-sdk-for-eddystone.git
 ```
-
 3. Copy the `nrf5_sdk_for_eddystone` folder and place it next to the other folders in the nRF5 SDK v11 `ble_peripheral folder`.
 ```
 examples
@@ -117,12 +109,10 @@ examples
                 ....
                 nrf_sdk_for_eddystone
 ```
-
-4. Run the script to clone and configure third-party cryptographic libraries.
+4. Run the `crypto_setup` script in the `nrf5_sdk_for_eddystone` folder. This will clone and configure third-party cryptographic libraries.
 ```
->> crypto_setup.bat (windows)
-or
->> crypto_setup.sh (linux)
+crypto_setup.bat (windows)
+crypto_setup.sh (linux)
 ```
 
 ## How to use
@@ -131,10 +121,18 @@ After flashing the firmware to a nRF52 DK it will automatically start broadcasti
 Detailed instructions on how to use the App is available in the [nRF Beacon for Eddystone GitHub repository](https://github.com/NordicSemiconductor/Android-nRF-Beacon-for-Eddystone).
 
 ## How it works
-Tony goes here
+**This section is not complete. Check back later.**
+
+Hard-coded values - what should be changed.
+
+Slot limitations and other limitations.
+
+How to change the number of slots.
+
+How to change...
 
 ## Issues and support
-This example application is provided as a source code foundation for beacon providers or for users simply wanting to experiment with Eddystone. It is not part of the official nRF SDK and support is therefore limited. Expect limited follow-up of issues.
+This example application is provided as a firmware foundation for beacon providers or for users simply wanting to experiment with Eddystone. It is not part of the official nRF5 SDK and support is therefore limited. Expect limited follow-up of issues. Questions about the firmware can be asked at [DevZone](https://devzone.nordicsemi.com/questions/).
 
 ## Cryptographic libraries
 The example application uses algorithms from the following third-party cryptographic libraries.
@@ -156,13 +154,9 @@ The nRF5 SDK for Eddystone licensing is split between the portion of the source 
 originates from Nordic Semiconductor ASA and the
 portion that originates from third-parties.
 
-* All source code contained under the following folders originates from Nordic
+* All source code, unless otherwise specified, originates from Nordic
   Semiconductor and is covered by the license present
   in documentation/license.txt in the nRF5 SDK:
-
-    - some
-    - example
-    - folders
 
 * All source code contained under the following folder originates from third
   parties, and is covered by the corresponding licenses found in each of their
@@ -170,4 +164,4 @@ portion that originates from third-parties.
 
     - crypto_libs
 
-* The crypto_libs folder is created by running the crypto_libs.bat program.
+Note: The crypto_libs folder is not included in this repository but is created by running the crypto_setup script.
