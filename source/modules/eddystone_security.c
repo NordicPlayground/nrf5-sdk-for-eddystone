@@ -7,7 +7,7 @@
 #include "pstorage.h"
 #include "eddystone_flash.h"
 #include "nrf_soc.h"
-#include "aes.h"
+#include "tiny-aes128-c\aes.h"
 #include "app_timer.h"
 #include "eddystone_app_config.h"
 #include "macros_common.h"
@@ -518,12 +518,11 @@ ret_code_t eddystone_security_client_pub_ecdh_receive( uint8_t slot_no, uint8_t 
 
     //Generate key material using shared ECDH secret as salt and public_keys as key material. RFC 2104 HMAC-SHA256.
     uint8_t digest[64];
-    int sha_err_code;
     uint8_t public_keys[64];
     memcpy(public_keys, phone_public, 32);
     memcpy(public_keys+32, beacon_public, 32);
 
-    sha_err_code = hmac(SHA256, shared, 32, public_keys, 64, digest);
+    hmac(SHA256, shared, 32, public_keys, 64, digest);
 
     /* Zero check of the shared secret becoming zero, try again if so. Max attempt limit twice */
     uint8_t empty_check[32] = {0};
@@ -559,12 +558,11 @@ ret_code_t eddystone_security_client_pub_ecdh_receive( uint8_t slot_no, uint8_t 
 
     //Generate 16-byte Identity Key from shared ECDH secret using RFC 2104 HMAC-SHA256 and salt
     uint8_t digest_salted[64];
-    sha_err_code = hmac(SHA256, salt, 1, digest, 32, digest_salted);
+    hmac(SHA256, salt, 1, digest, 32, digest_salted);
     DEBUG_PRINTF(0,"  hmac(SHA256, salt, 1, digest, 32, digest_salted);  \r\n" ,0);
 
     #ifdef ECDH_TEST
     SEGGER_RTT_printf(0, "\r\n\r\n********* 7. Generate 16-byte key material from shared ECDH secret using RFC 2104 HMAC-SHA256 and salt\r\n");
-    SEGGER_RTT_printf(0, "\r\nHMAC RETURN CODE: %d", sha_err_code);
     SEGGER_RTT_printf(0, "\r\nHMAC DIGEST INPUT:\r\n ");
     print_array((uint8_t*)digest, 32);
     SEGGER_RTT_printf(0, "\r\nHMAC DIGEST SALTED OUTPUT:\r\n ");
@@ -675,7 +673,6 @@ void eddystone_security_tlm_to_etlm( uint8_t ik_slot_no, eddystone_tlm_frame_t *
     const uint8_t EIK_SIZE      = ECS_AES_KEY_SIZE;
 
     cf_prp prp;                                                     // Describe the block cipher to use.
-    void *prpctx;                                                   // Describe the block cipher to use.
 
     uint8_t plain[TLM_DATA_SIZE]  = {0};                            // plaintext tlm, without the frame byte and version
     size_t nplain                 = TLM_DATA_SIZE;                  // Length of message plaintext.
@@ -713,8 +710,9 @@ void eddystone_security_tlm_to_etlm( uint8_t ik_slot_no, eddystone_tlm_frame_t *
     uint8_t cipher[EDDYSTONE_ETLM_ECRYPTED_LENGTH];                 // Ciphertext output. nplain bytes are written.
     uint8_t tag[TAG_SIZE] = {0};                                    // Authentication tag. ntag bytes are written.
     size_t  ntag                         = TAG_SIZE;                // Length of authentication tag.
+    #ifdef ETLM_DEBUG_SESH
     uint8_t decrypted_tlm[TLM_DATA_SIZE];                           // Decryption result.
-
+    #endif
 
 
     #ifdef ETLM_DEBUG_SESH
@@ -732,8 +730,8 @@ void eddystone_security_tlm_to_etlm( uint8_t ik_slot_no, eddystone_tlm_frame_t *
     cf_aes_context ctx;
     cf_aes_init(&ctx, key, nkey);
 
-    prp.encrypt = cf_aes_encrypt;   // Encryption context
-    prp.decrypt = cf_aes_decrypt;   // Decryption context
+    prp.encrypt = (cf_prp_block)cf_aes_encrypt;   // Encryption context
+    prp.decrypt = (cf_prp_block)cf_aes_decrypt;   // Decryption context
     prp.blocksz = ECS_AES_KEY_SIZE;
 
     #ifdef ETLM_PRINT_TEST

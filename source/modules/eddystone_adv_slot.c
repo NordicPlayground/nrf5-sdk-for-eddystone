@@ -105,7 +105,8 @@ void eddystone_adv_slot_adv_intrvl_set( uint8_t slot_no, ble_ecs_adv_intrvl_t * 
 {
     //Boundary check: if out of bounds, set input value to boundary value
     SLOT_BOUNDARY_CHECK(slot_no);
-
+    
+    //Make temp_var little endian first
     uint16_t temp_var = *p_adv_intrvl;
     temp_var = BYTES_SWAP_16BIT(temp_var);
 
@@ -113,11 +114,13 @@ void eddystone_adv_slot_adv_intrvl_set( uint8_t slot_no, ble_ecs_adv_intrvl_t * 
 
     if (temp_var < MIN_NON_CONN_ADV_INTERVAL) //convert constants to big endian values
     {
-        *p_adv_intrvl = BYTES_SWAP_16BIT(MIN_NON_CONN_ADV_INTERVAL);
+        *p_adv_intrvl = MIN_NON_CONN_ADV_INTERVAL;
+        *p_adv_intrvl = BYTES_SWAP_16BIT(*p_adv_intrvl);
     }
     else if (temp_var > MAX_ADV_INTERVAL)
     {
-        *p_adv_intrvl = BYTES_SWAP_16BIT(MAX_ADV_INTERVAL);
+        *p_adv_intrvl = MAX_ADV_INTERVAL;
+        *p_adv_intrvl = BYTES_SWAP_16BIT(*p_adv_intrvl);
     }
 
     if (!global)
