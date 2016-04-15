@@ -71,7 +71,7 @@ Characteristic | Name | Status
 
 #### Software
 * [nRF5 SDK 11](http://developer.nordicsemi.com/nRF5_SDK/nRF5_SDK_v11.x.x/)
-* [Keil uVision 5 IDE](https://www.keil.com/demo/eval/arm.htm)
+* [Keil uVision 5 IDE](https://www.keil.com/demo/eval/arm.htm) (Note: you must have a registered version of Keil in order to compile source code that generates more than 32kB of source and data, currently this project generates 39 kB even with -O3 optimization level)
 * [Git Bash](https://git-scm.com/downloads)
 * [nRFgo Studio](https://www.nordicsemi.com/eng/nordic/Products/nRFgo-Studio/nRFgo-Studio-Win64/14964)
 
@@ -82,11 +82,12 @@ The application might work with other versions of the SDK/Keil but some modifica
 * Android phone 4.3+
 
 ## Known issues
-* Only Keil is supported for now. GCC and IAR are  scheduled for a future release.
+* Only Keil is supported for now. GCC and IAR are scheduled for a future release.
 * Only Windows development environment is supported for now. Linux and OSX are scheduled for a later release. You may still flash the firmware using the [Quick start](#quick-start) guide.
 * eTLM encryption library has a known [issue](https://github.com/ctz/cifra/issues/3).
 * After an Eddystone-EID slot is configured it will be preserved after power cycling. However, if you try to read the ECDH key again from the characteristic it will not be available. Slots containing other frame types are not preserved after power cycling.
 * When compiling there are warnings from the third-party crypto libraries.
+
 
 ## How to install
 #### Quick start
