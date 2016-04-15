@@ -71,7 +71,7 @@ Characteristic | Name | Status
 
 #### Software
 * [nRF5 SDK 11](http://developer.nordicsemi.com/nRF5_SDK/nRF5_SDK_v11.x.x/)
-* [Keil uVision 5 IDE](https://www.keil.com/demo/eval/arm.htm) (Note: you must have a registered version of Keil in order to compile source code that generates more than 32kB of source and data, currently this project generates 39 kB even with -O3 optimization level)
+* [Keil uVision 5 IDE](https://www.keil.com/demo/eval/arm.htm) (Note: you must have a registered version of Keil in order to compile source code that generates more than 32kB of code and data, currently this project generates 39 kB even with -O3 optimization level)
 * [Git Bash](https://git-scm.com/downloads)
 * [nRFgo Studio](https://www.nordicsemi.com/eng/nordic/Products/nRFgo-Studio/nRFgo-Studio-Win64/14964)
 
@@ -140,7 +140,7 @@ After flashing the firmware to a nRF52 DK it will automatically start broadcasti
 Detailed instructions on how to use the App is available in the [nRF Beacon for Eddystone GitHub repository](https://github.com/NordicSemiconductor/Android-nRF-Beacon-for-Eddystone).
 
 ## How it works
-Instructions on how to modify the firmware are coming soon.
+Instructions on the firmware structure and on how to modify the firmware are coming soon.
 
 ## Issues and support
 This example application is provided as a firmware foundation for beacon providers or for users simply wanting to experiment with Eddystone. It is not part of the official nRF5 SDK and support is therefore limited. Expect limited follow-up of issues.
