@@ -1,8 +1,10 @@
 # nRF5 SDK for Eddystone™
 
-<img src="https://github.com/google/eddystone/blob/master/branding/assets/png/EddyStone_final-01.png" alt="Eddystone logo" width="300px" align="middle">
+NOTE: Source code is coming soon. You may still follow the [Quick start](#quick-start) guide to flash your nRF52 DK with the firmware.
 
 This is an example implementation of the Eddystone GATT Configuration Service for nRF52. Support for nRF51 is scheduled for a future release. The application is intended to be used together with the open source [nRF Beacon for Eddystone](https://github.com/NordicSemiconductor/Android-nRF-Beacon-for-Eddystone) Android App. It is recommended to read the [official specification](https://github.com/google/eddystone) for Eddystone, an open beacon format from Google to get a thorough understanding. Go to [Quick start](#quick-start) if you want to experiment right away.
+
+<img src="https://github.com/google/eddystone/blob/master/branding/assets/png/EddyStone_final-01.png" alt="Eddystone logo" width="300px" align="middle">
 
 #### Table of contents
 * [Introduction](#introduction)
@@ -13,7 +15,7 @@ This is an example implementation of the Eddystone GATT Configuration Service fo
 * [How to use](#how-to-use)
 * [How it works](#how-it-works)
 * [Issues and support](#how-it-works)
-* [Cryptographic libraries](#cryptographic-libraries)
+* [Third-party crypto libraries](#third-party-cryptolibraries)
 * [About](#about)
 * [License](#license)
 
@@ -25,7 +27,7 @@ The new Eddystone GATT Configuration Service enables simple configuration of bea
 * Eddystone-TLM
 * Eddystone-eTLM
 
-Each frame type is given a dedicated slot and it is possible to set unique advertising intervals for each slot. This means that a beacon can send a Eddystone-URL every two seconds and a Eddystone-UID every second or any other combination. The current firmware has a lower limit of 100ms for advertising interval. It will be up to the user or developer to choose values that best fit with the use case and desired power consumption.
+Currently the firmware has five available slots and each slot can be configured to any of the unique frame types. From the source code it is possible to increase or decrease the number of available slots.
 
 In addition to the new Eddystone GATT Configuration Service there are also two new frame types aimed at secure use cases.
 
@@ -43,11 +45,11 @@ By randomizing and never sending the Unlock Key in clear text it is difficult to
 Eddystone-EIDs randomize the device ID of the beacon as well as the encrypted advertising data. Since there are no constant values to track it will be difficult if not impossible to track the location of a single beacon over any significant time period.
 
 > **IMPORTANT**
-A beacon should only be configured as Eddystone-EID and Eddystone-eTLM slots in order to have all the security benefits. A beacon configured as both Eddystone-EID and Eddystone-UID would still be vulnerable to tracking.
+ In order to have all the security benefits of Eddystone-EID and Eddystone-eTLM refrain from configuring other frame types while broadcasting.
 
 
 ## Supported characteristics
-The application supports all functionality of the Eddystone GATT Configuration Service except the advanced optional characteristics as displayed in the table below.
+The application supports all functionality of the Eddystone GATT Configuration Service except the advanced optional characteristics as displayed in the table below. The advanced characteristics will be implemented in a future release.
 
 Characteristic | Name | Status
 ---:|---|:---:
@@ -60,7 +62,7 @@ Characteristic | Name | Status
 7 | Unlock | :white_check_mark:
 8 | Public ECDH Key | :white_check_mark:
 9 | EID Identity Key | :white_check_mark:
-10 | ADV Slot | :white_check_mark:
+10 | Read/Write ADV Slot | :white_check_mark:
 11 | Factory Reset (advanced) |
 12 | Remain Connectable (advanced) |
 
@@ -74,9 +76,14 @@ The application might work with other versions of the SDK but some modification 
 
 #### Hardware
 * [nRF52 Development Kit](https://octopart.com/nrf52-dk-nordic+semiconductor-67145952)
+* Android phone 4.3+
 
 ## Known issues
-
+* Only Keil is supported for now. GCC and IAR are  scheduled for a future release.
+* Only Windows development environment is supported for now. Linux and OSX are scheduled for a later release. You may still flash the firmware using the [Quick start](#quick-start) guide.
+* eTLM encryption library has a known [issue](https://github.com/ctz/cifra/issues/3).
+* After an Eddystone-EID slot is configured it will be preserved after power cycling. However, if you try to read the ECDH key again from the characteristic it will not be available. Slots containing other frame types are not preserved after power cycling.
+* When compiling there are warnings from the third-party crypto libraries.
 
 ## How to install
 #### Quick start
@@ -88,7 +95,7 @@ This is the recommended approach if you just want to get started quickly without
 
 3. Drag and drop the `nrf5_sdk_for_eddystone.hex` file on the JLINK drive to automatically program the nRF52 DK.
 
-4. Install the nRF Beacon for Eddystone Android App from [Play Store](https://play.google.com/store/apps/details?id=no.nordicsemi.android.nrfbeacon.nearby).
+4. Install the nRF Beacon for Eddystone Android App from [Play Store](https://play.google.com/store/apps/details?id=no.nordicsemi.android.nrfbeacon.nearby) (available soon).
 
 5. Follow the [instructions on how to use the App](https://github.com/NordicSemiconductor/Android-nRF-Beacon-for-Eddystone).
 
@@ -114,6 +121,7 @@ examples
 crypto_setup.bat (windows)
 crypto_setup.sh (linux)
 ```
+5. Open the .uvprojx project file in Keil.
 
 ## How to use
 After flashing the firmware to a nRF52 DK it will automatically start broadcasting a Eddystone-URL pointing to http://www.nordicsemi.com. In order to configure the beacon to broadcast a different URL or a different frame type it is necessary to put the DK in configuration mode and write the Lock Key to the Unlock Characteristic. This is done by using the nRF Beacon for Eddystone App.
@@ -121,20 +129,12 @@ After flashing the firmware to a nRF52 DK it will automatically start broadcasti
 Detailed instructions on how to use the App is available in the [nRF Beacon for Eddystone GitHub repository](https://github.com/NordicSemiconductor/Android-nRF-Beacon-for-Eddystone).
 
 ## How it works
-**This section is not complete. Check back later.**
-
-Hard-coded values - what should be changed.
-
-Slot limitations and other limitations.
-
-How to change the number of slots.
-
-How to change...
+Instructions on how to modify the firmware are coming soon.
 
 ## Issues and support
-This example application is provided as a firmware foundation for beacon providers or for users simply wanting to experiment with Eddystone. It is not part of the official nRF5 SDK and support is therefore limited. Expect limited follow-up of issues. Questions about the firmware can be asked at [DevZone](https://devzone.nordicsemi.com/questions/).
+This example application is provided as a firmware foundation for beacon providers or for users simply wanting to experiment with Eddystone. It is not part of the official nRF5 SDK and support is therefore limited. Expect limited follow-up of issues.
 
-## Cryptographic libraries
+## Third-party crypto libraries
 The example application uses algorithms from the following third-party cryptographic libraries.
 
 Library | Algorithm | License
