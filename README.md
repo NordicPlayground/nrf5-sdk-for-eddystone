@@ -92,20 +92,20 @@ The application might work with other versions of the SDK/Keil but some modifica
 #### Quick start
 This is the recommended approach if you just want to get started quickly without building the project yourself.
 
-1. Connect the nRF52 DK to your computer. It will show up as a JLINK USB drive.
+*  Connect the nRF52 DK to your computer. It will show up as a JLINK USB drive.
 
-2. Download the `nrf5_sdk_for_eddystone.hex` file in the hex folder in this repository.
+*  Download the `nrf5_sdk_for_eddystone_v0.5.hex` file in the hex folder in this repository.
 
-3. Drag and drop the `nrf5_sdk_for_eddystone.hex` file on the JLINK drive to automatically program the nRF52 DK.
+*  Drag and drop the `nrf5_sdk_for_eddystone_v0.5.hex` file on the JLINK drive to automatically program the nRF52 DK.
 
-4. Install the nRF Beacon for Eddystone Android App from [Play Store](https://play.google.com/store/apps/details?id=no.nordicsemi.android.nrfbeacon.nearby) (available soon).
+*  Install the nRF Beacon for Eddystone Android App from [Play Store](https://play.google.com/store/apps/details?id=no.nordicsemi.android.nrfbeacon.nearby).
 
-5. Follow the [instructions on how to use the App](https://github.com/NordicSemiconductor/Android-nRF-Beacon-for-Eddystone).
+*  Follow the [instructions on how to use the App](https://github.com/NordicSemiconductor/Android-nRF-Beacon-for-Eddystone).
 
 #### Compile from source
-1. Download the [nRF5 Software Development Kit v11](http://developer.nordicsemi.com/nRF5_SDK/nRF5_SDK_v11.x.x/) and extract to a suitable location. We recommend placing it close to root to avoid problems related to long folder and file names.
+*  Download the [nRF5 Software Development Kit v11](http://developer.nordicsemi.com/nRF5_SDK/nRF5_SDK_v11.x.x/) and extract to a suitable location. We recommend placing it close to root to avoid problems related to long folder and file names.
 
-2. Clone this repository into the SDK under ...nRF5_SDK_11.0.0_xxxxxxx\examples\ble_peripheral
+*  Clone this repository into the SDK under ...nRF5_SDK_11.0.0_xxxxxxx\examples\ble_peripheral
 ```
 git clone https://github.com/NordicSemiconductor/nrf5-sdk-for-eddystone.git
 ```
@@ -119,15 +119,15 @@ examples
                 ....
                 nrf_sdk_for_eddystone
 ```
-4. Run the `crypto_setup_all.sh` script in the `nrf5_sdk_for_eddystone\source` folder. This will clone and configure third-party cryptographic libraries.
+*  Run the `crypto_setup_all.sh` script in the `nrf5_sdk_for_eddystone\source` folder. This will clone and configure third-party cryptographic libraries.
 
-5. Open the .uvprojx project file in Keil, which is found here:
+*  Open the .uvprojx project file in Keil, which is found here:
 ```
 nrf5-sdk-for-eddystone\project\pca10040_s132\arm5_no_packs
 ```
-6. The project is expected to compile with 2 warnings coming from one of the crypto libraries
+*  The project is expected to compile with 2 warnings coming from one of the crypto libraries
 
-7. Before loading the firmware onto your nRF52 DK or starting a debug session in Keil, you must flash in the S132 Softdevice that can be found here:
+*  Before loading the firmware onto your nRF52 DK or starting a debug session in Keil, you must flash in the S132 Softdevice that can be found here:
 ```
 components\softdevice\s132\hex\s132_nrf52_2.0.0_softdevice.hex
 ```
