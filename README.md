@@ -133,7 +133,9 @@ components\softdevice\s132\hex\s132_nrf52_2.0.0_softdevice.hex
 The Softdevice can be flashed in with Nordic's [nRFgo Studio](https://www.nordicsemi.com/eng/nordic/Products/nRFgo-Studio/nRFgo-Studio-Win64/14964) tool. For instructions on how to use nRFgo Studio, follow the tutorial here under the [Preparing the Development Kit](https://devzone.nordicsemi.com/tutorials/2/) section.
 
 ## How to use
-After flashing the firmware to a nRF52 DK it will automatically start broadcasting a Eddystone-URL pointing to http://www.nordicsemi.com. In order to configure the beacon to broadcast a different URL or a different frame type it is necessary to put the DK in configuration mode and write the Lock Key to the Unlock Characteristic. This is done by using the nRF Beacon for Eddystone App.
+After flashing the firmware to a nRF52 DK it will automatically start broadcasting a Eddystone-URL pointing to http://www.nordicsemi.com, with LED 1 blinking. In order to configure the beacon to broadcast a different URL or a different frame type it is necessary to put the DK in configuration mode by pressing Button 1 on the DK so it starts advertising in "Connectable Mode". After that, it can be connected to nRF Beacon for Eddystone app, which allows the writing of the Lock Key to the Unlock Characteristic.
+
+Please note that after pressing Button 1, the DK will only broadcast in "Connectable Mode" for 1 minute. After which, you must press Button 1 again if you did not manage to connect in time with the App.
 
 Detailed instructions on how to use the App is available in the [nRF Beacon for Eddystone GitHub repository](https://github.com/NordicSemiconductor/Android-nRF-Beacon-for-Eddystone).
 
