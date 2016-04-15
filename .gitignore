@@ -1,0 +1,11 @@
+## KEIL AND JLINK ##
+_build
+RTE
+JLinkSettings.ini
+JLinkLog.txt
+*.uvguix*
+
+## Crypto Library should not be pushed directly ##
+crypto_libs
+
+
