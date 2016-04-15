@@ -37,7 +37,13 @@ mv crypto_libs/temp/rfc6234/*.txt crypto_libs/rfc6234
 mv crypto_libs/temp/rfc6234/*.c crypto_libs/rfc6234
 mv crypto_libs/temp/rfc6234/*.h crypto_libs/rfc6234
 
-
+# find and replace MIN/MAX defines
+sed -i 's/#define MIN(x, y) \\/#ifndef   MIN\n  #define MIN(a, b)         (((a) < (b)) ? (a) : (b))\n#endif/' crypto_libs/cifra/handy.h
+sed -i 's/#define MAX(x, y) \\/#ifndef   MAX\n  #define MAX(a, b)         (((a) > (b)) ? (a) : (b))\n#endif/' crypto_libs/cifra/handy.h
+sed -i '/  ({ typeof (x) __x = (x); \\/d' crypto_libs/cifra/handy.h
+sed -i '/     typeof (y) __y = (y); \\/d' crypto_libs/cifra/handy.h
+sed -i '/     __x < __y ? __x : __y; })/d' crypto_libs/cifra/handy.h
+sed -i '/     __x > __y ? __x : __y; })/d' crypto_libs/cifra/handy.h
 
 echo "Cleaning up..."
 rm -rf crypto_libs/temp
