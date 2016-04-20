@@ -8,4 +8,6 @@ JLinkLog.txt
 ## Crypto Library should not be pushed directly ##
 crypto_libs
 
-
+## Symlinks should not be commited ##
+sdk_components
+sdk_external

@@ -2,6 +2,8 @@
 # v0.9
 set -e
 
+cd ../source
+
 echo "Cloning Repositories..."
 git clone "https://github.com/massar/rfc6234.git" "crypto_libs/temp/rfc6234"
 cd crypto_libs/temp/rfc6234

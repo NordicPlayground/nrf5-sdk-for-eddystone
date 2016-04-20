@@ -2,6 +2,7 @@
 #include "ble_advdata.h"
 #include "ble_advertising.h"
 #include "ble_conn_params.h"
+#include "ble_ecs.h"
 #include "eddystone.h"
 #include "eddystone_registration_ui.h"
 #include "eddystone_app_config.h"
@@ -30,6 +31,7 @@ APP_TIMER_DEF(m_eddystone_etlm_cycle_timer);
 
 static bool m_is_connectable_adv = false;
 static bool m_is_connected       = false;
+static uint8_t m_ecs_uuid_type = 0;
 
 //Struct to keep track of the pairing between eTLM and EIDs
 typedef struct
@@ -59,6 +61,7 @@ static void all_advertising_halt(void);
 static void adv_interval_timer_start(void);
 static void intervals_calculate(void);
 static void adv_slot_timer_start(void);
+static void fetch_adv_data_from_slot( uint8_t slot, uint8_array_t * p_eddystone_data_array );
 
 /**@brief Function for starting advertising of the eddystone beacon.
  * @param[in]   conn  connectable or non-connectable
@@ -105,12 +108,49 @@ static void eddystone_ble_registr_adv_cb(void)
 {
     if (m_is_connectable_adv != true && m_is_connected == false)
     {
-        m_conn_adv_params                = m_non_conn_adv_params;
+        all_advertising_halt();
+
+        uint32_t      err_code;
+        ble_advdata_t adv_data;
+        ble_advdata_t scrsp_data;
+        ble_uuid_t    adv_uuids[] = {{EDDYSTONE_UUID, BLE_UUID_TYPE_BLE}};
+        ble_uuid_t    scrp_uuids[] = {{BLE_UUID_ECS_SERVICE, m_ecs_uuid_type}};
+
+        uint8_array_t eddystone_data_array;                             // Array for Service Data structure.
+
+        fetch_adv_data_from_slot(0, &eddystone_data_array);
+
+        ble_advdata_service_data_t service_data;                        // Structure to hold Service Data.
+        service_data.service_uuid = APP_EDDYSTONE_UUID;                 // Eddystone UUID to allow discoverability on iOS devices.
+        service_data.data = eddystone_data_array;                       // Array for service advertisement data.
+
+        // Build and set advertising data.
+        memset(&adv_data, 0, sizeof(adv_data));
+
+        adv_data.name_type               = BLE_ADVDATA_NO_NAME;
+        adv_data.flags                   = BLE_GAP_ADV_FLAGS_LE_ONLY_GENERAL_DISC_MODE;
+        adv_data.uuids_complete.uuid_cnt = sizeof(adv_uuids) / sizeof(adv_uuids[0]);
+        adv_data.uuids_complete.p_uuids  = adv_uuids;
+        adv_data.p_service_data_array    = &service_data;                // Pointer to Service Data structure.
+        adv_data.service_data_count      = 1;
+
+        memset(&scrsp_data, 0, sizeof(scrsp_data));
+        scrsp_data.name_type               = BLE_ADVDATA_FULL_NAME;
+        scrsp_data.include_appearance      = false;
+        scrsp_data.uuids_complete.uuid_cnt = sizeof(scrp_uuids) / sizeof(scrp_uuids[0]);
+        scrsp_data.uuids_complete.p_uuids  = scrp_uuids;
+
+        err_code = ble_advdata_set(&adv_data, &scrsp_data);
+        APP_ERROR_CHECK(err_code);
+
+        memset(&m_conn_adv_params, 0, sizeof(m_conn_adv_params));
+
         m_conn_adv_params.type           = BLE_GAP_ADV_TYPE_ADV_IND;
+        m_non_conn_adv_params.p_peer_addr = NULL;                                // Undirected advertisement.
+        m_non_conn_adv_params.fp          = BLE_GAP_ADV_FP_ANY;
         m_conn_adv_params.interval       = MSEC_TO_UNITS(DEFAULT_CONNECTABLE_ADV_INTERVAL_MS, UNIT_0_625_MS);
         m_conn_adv_params.timeout        = APP_CFG_CONNECTABLE_ADV_TIMEOUT;
 
-        all_advertising_halt();
         m_is_connectable_adv = true;
         eddystone_ble_advertising_start(EDDYSTONE_BLE_ADV_CONNECTABLE_TRUE);
     }
@@ -223,9 +263,7 @@ static void advertising_init( uint8_t slot )
 {
     uint32_t      err_code;
     ble_advdata_t adv_data;
-    uint8_t       flags = BLE_GAP_ADV_FLAGS_LE_ONLY_GENERAL_DISC_MODE;
     ble_uuid_t    adv_uuids[] = {{EDDYSTONE_UUID, BLE_UUID_TYPE_BLE}};
-
 
     uint8_array_t eddystone_data_array;                             // Array for Service Data structure.
 
@@ -239,7 +277,7 @@ static void advertising_init( uint8_t slot )
     memset(&adv_data, 0, sizeof(adv_data));
 
     adv_data.name_type               = BLE_ADVDATA_NO_NAME;
-    adv_data.flags                   = flags;
+    adv_data.flags                   = BLE_GAP_ADV_FLAGS_LE_ONLY_GENERAL_DISC_MODE;
     adv_data.uuids_complete.uuid_cnt = sizeof(adv_uuids) / sizeof(adv_uuids[0]);
     adv_data.uuids_complete.p_uuids  = adv_uuids;
     adv_data.p_service_data_array    = &service_data;                // Pointer to Service Data structure.
@@ -490,9 +528,10 @@ static void timers_init(void)
     APP_ERROR_CHECK(err_code);
 }
 
-void eddystone_advertising_manager_init(void)
+void eddystone_advertising_manager_init( uint8_t ecs_uuid_type )
 {
     uint32_t err_code;
+    m_ecs_uuid_type = ecs_uuid_type;
     err_code = eddystone_registration_ui_init(eddystone_ble_registr_adv_cb);
     APP_ERROR_CHECK(err_code);
     timers_init();

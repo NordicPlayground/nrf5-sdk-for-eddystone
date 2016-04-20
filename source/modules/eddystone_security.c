@@ -28,7 +28,6 @@
 #include "sha.h"
 #include "testutil.h"
 
-// #define TIMER_TEST
  // #define ETLM_PRINT_TEST
  // #define ECDH_TEST
  // #define CRYPTO_TEST
@@ -48,7 +47,7 @@
 #define  SECURITY_TIMER_TIMEOUT  APP_TIMER_TICKS(1000, APP_TIMER_PRESCALER)
 #define  MS_PER_TICK             ((1+APP_TIMER_PRESCALER)*1000)/32768
 #define  RTC1_TICKS_MAX          16777216
-#define  TK_ROLLOVER             65536
+#define  TK_ROLLOVER             0x10000
 
 static eddystone_security_init_t m_security_init;
 
@@ -140,64 +139,55 @@ static void eddystone_security_lock_code_init(uint8_t * p_lock_buff)
 /**@brief Updates all active EID slots' timer*/
 static void eddystone_security_update_time(void * p_context)
 {
-    uint32_t current_tick = 0;
-    uint32_t tick_diff;
-    float    ms = 0;
-    app_timer_cnt_get(&current_tick);
+    static uint32_t us_delay = 0;
+    const uint32_t US_PER_S = 1000000;
 
-    static float    ms_remainder_from_seconds = 0;
-    static uint32_t previous_tick = 0;
+    //For every 1 second interrupt, there is 30 us delay with timer prescaler set at 0.
+    us_delay += 30;
 
-    if (current_tick > previous_tick)
+    if (APP_TIMER_PRESCALER != 0)
     {
-        //ticks since last update
-        tick_diff = current_tick - previous_tick;
-    }
-    else if (current_tick < previous_tick)
-    {
-        //RTC counter has overflown
-        tick_diff = current_tick + (RTC1_TICKS_MAX - previous_tick);
+        //If the prescaler is not 0, then a new us_delay increment needs to be calculated...
+        //Trigger a run time error here to prevent developers from blindly changing the prescaler
+        APP_ERROR_CHECK(NRF_ERROR_INVALID_PARAM);
     }
 
-    //convert ticks to ms
-    ms = (float)((float)tick_diff*(float)MS_PER_TICK + ms_remainder_from_seconds);
-
-    if (ms >= 1000)
+    //Cycle through the slots
+    for (uint8_t i = 0; i < APP_MAX_EID_SLOTS; i++)
     {
-        ms_remainder_from_seconds = ms - (uint32_t)(ms);
-        //DEBUG_PRINTF(0, "EID CLOCK  : %d ms \r\n", (uint32_t)(ms));
-        //Cycle through the slots
-        for (uint8_t i = 0; i < APP_MAX_EID_SLOTS; i++)
+        if (m_security_slots[i].is_occupied)
         {
-            if (m_security_slots[i].is_occupied)
-            {
-                m_security_slots[i].timing.time_seconds += (uint32_t)((ms)/1000);
-                // DEBUG_PRINTF(0, "Slot[%d] Time: %d s \r\n", i, m_security_slots[i].timing.time_seconds);
-                // DEBUG_PRINTF(0, "Rotation Time - Slot[%d]: %d s \r\n", i, (2 <<  m_security_slots[i].timing.k_scaler - 1));
-                #ifndef TIMER_TEST
+            m_security_slots[i].timing.time_seconds++;
 
-                if (m_security_slots[i].timing.time_seconds == TK_ROLLOVER)
+            if (m_security_slots[i].timing.time_seconds % TK_ROLLOVER)
+            {
+                eddystone_security_temp_key_generate(i);
+            }
+
+            if ((m_security_slots[i].timing.time_seconds % (2 << (m_security_slots[i].timing.k_scaler - 1))) == 0)
+            {
+                eddystone_security_eid_generate(i);
+            }
+
+            //when us_delay accumulates to more than 1 second, add 1 more sec to the clock.
+            //Also do the TK roll over and K scaler timer checks again
+            if(us_delay >= US_PER_S)
+            {
+                m_security_slots[i].timing.time_seconds++;
+                us_delay -= US_PER_S;
+
+                if (m_security_slots[i].timing.time_seconds % TK_ROLLOVER == 0)
                 {
                     eddystone_security_temp_key_generate(i);
                 }
 
-                if (m_security_slots[i].timing.time_seconds % (2 << (m_security_slots[i].timing.k_scaler - 1)) == 0)
+                if ((m_security_slots[i].timing.time_seconds % (2 << (m_security_slots[i].timing.k_scaler - 1))) == 0)
                 {
-
                     eddystone_security_eid_generate(i);
                 }
-                #endif
             }
         }
-
     }
-    else
-    {
-        ms_remainder_from_seconds = ms;
-        // DEBUG_PRINTF(0, "EID CLOCK DELAYED : %d ms \r\n", 1000 - (uint32_t)(ms));
-    }
-
-    previous_tick = current_tick;
 }
 
 ret_code_t eddystone_security_init(eddystone_security_init_t * p_init)
