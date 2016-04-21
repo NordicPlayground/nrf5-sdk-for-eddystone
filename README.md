@@ -24,6 +24,7 @@ This is an example implementation of the Eddystone GATT Configuration Service fo
     * Merged in cifra crypto library's fix for a [known issue](https://github.com/ctz/cifra/issues/3) with EAX encryption of the eTLM frames. Now eTLM frames are properly encrypted.
     * Fixed a bug with the EID slot 4-byte clock being slow.
     * Added scan response capability when the beacon is put into connectable mode which contains `nRF5_Eddy` as the device name and the Eddystone Configuration GATT Service UUID `a3c87500-8ed3-4bdf-8a39-a01bebede295` as the UUID in the scan response packet, as recommended by the latest [spec](https://github.com/google/eddystone/tree/master/configuration-service) from Google.
+    * Improved LED Indication for different beacon states: Advertising, Advertising in connectable mode, Connected. Details below in [How to use](#how-to-use).
 
 * __v0.5__ (April 15 2016)
     * First public release
@@ -166,6 +167,13 @@ The Softdevice can be flashed in with Nordic's [nRFgo Studio](https://www.nordic
 After flashing the firmware to a nRF52 DK it will automatically start broadcasting a Eddystone-URL pointing to http://www.nordicsemi.com, with LED 1 blinking. In order to configure the beacon to broadcast a different URL or a different frame type it is necessary to put the DK in configuration mode by pressing Button 1 on the DK so it starts advertising in "Connectable Mode". After that, it can be connected to nRF Beacon for Eddystone app, which allows the writing of the Lock Key to the Unlock Characteristic.
 
 Please note that after pressing Button 1, the DK will only broadcast in "Connectable Mode" for 1 minute. After which, you must press Button 1 again if you did not manage to connect in time with the App.
+
+###### LED Indications:
+| LED No.       | LED State       | Beacon State  |
+| ------------- |:-------------:| -----:|
+| LED 1     | Blinking | Advertising |
+| LED 2        | On      |   Connected to Central |
+| LED 3 | On     |    Advertising in Connectable Mode |
 
 Detailed instructions on how to use the App is available in the [nRF Beacon for Eddystone GitHub repository](https://github.com/NordicSemiconductor/Android-nRF-Beacon-for-Eddystone).
 
