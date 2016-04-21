@@ -4,7 +4,7 @@ set -e
 
 #SDK path variable: enter the absolute path of your existing SDK 11 here
 #e.g. SDK_PATH="C:/ABC/nRF5_SDK_11.0.0_89a8197" (Make sure to use / and not \)
-export SDK_PATH="C:/Repos/nRF5_SDK_11.0.0_89a8197"
+export SDK_PATH=""
 
 if [ -n "$SDK_PATH" ]; then
     # Go into cmd to run create_symlinks.bat
