@@ -105,7 +105,7 @@ void eddystone_adv_slot_adv_intrvl_set( uint8_t slot_no, ble_ecs_adv_intrvl_t * 
 {
     //Boundary check: if out of bounds, set input value to boundary value
     SLOT_BOUNDARY_CHECK(slot_no);
-    
+
     //Make temp_var little endian first
     uint16_t temp_var = *p_adv_intrvl;
     temp_var = BYTES_SWAP_16BIT(temp_var);
@@ -352,6 +352,7 @@ void eddystone_adv_slot_eid_set( uint8_t slot_no )
     m_slots[slot_no].is_configured = true;
     m_slots[slot_no].frame_rw_buffer[0] = EDDYSTONE_FRAME_TYPE_EID;
     m_slots[slot_no].adv_frame.eid.frame_type = EDDYSTONE_FRAME_TYPE_EID;
+    m_slots[slot_no].frame_rw_length = ECS_EID_WRITE_ECDH_LENGTH;
     eddystone_set_ranging_data(slot_no, m_slots[slot_no].radio_tx_pwr);
     eddystone_security_eid_get(slot_no, (uint8_t*)m_slots[slot_no].adv_frame.eid.eid);
 }
