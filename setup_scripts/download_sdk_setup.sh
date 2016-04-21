@@ -24,7 +24,8 @@ err_code=$?
 if [ "$err_code" = "50" ]
 then
     #Ignore this "disk full" error
-else if [ "$err_code" != "0" ]
+    echo "Ignoring Disk Full error"
+elif [ "$err_code" != "0" ]
 then
     echo "Could not unzip SDK. Does $DL_LOCATION/$SDK_VERS already exist? Press Enter to Exit..."
     read
