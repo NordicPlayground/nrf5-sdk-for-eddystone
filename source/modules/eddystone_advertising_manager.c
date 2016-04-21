@@ -78,6 +78,8 @@ static void eddystone_ble_advertising_start(eddystone_ble_adv_connectable_t conn
             err_code = sd_ble_gap_adv_start(&m_non_conn_adv_params);
             break;
         case EDDYSTONE_BLE_ADV_CONNECTABLE_TRUE:
+            LEDS_ON(1 << LED_3);
+            bsp_indication_set(BSP_INDICATE_ADVERTISING);
             DEBUG_PRINTF(0,"Connectable ADV... \r\n",0);
             err_code = sd_ble_gap_adv_start(&m_conn_adv_params);
             break;
@@ -87,9 +89,6 @@ static void eddystone_ble_advertising_start(eddystone_ble_adv_connectable_t conn
     {
         APP_ERROR_CHECK(err_code);
     }
-
-   err_code = bsp_indication_set(BSP_INDICATE_ADVERTISING);
-   APP_ERROR_CHECK(err_code);
 }
 
 /**@brief Function for stopping all advertising and all running timers */
@@ -165,13 +164,20 @@ void eddystone_advertising_manager_on_ble_evt( ble_evt_t * p_ble_evt )
     switch (p_ble_evt->header.evt_id)
     {
         case BLE_GAP_EVT_CONNECTED:
+            bsp_indication_set(BSP_INDICATE_IDLE);
+            LEDS_ON(1<<LED_2);
+            LEDS_OFF(1<<LED_3);
             m_is_connectable_adv = false;
             m_is_connected = true;
             slots_advertising_start();
             break;
 
         case BLE_GAP_EVT_DISCONNECTED:
+            bsp_indication_set(BSP_INDICATE_IDLE);
+            LEDS_OFF(1<<LED_2);
+            LEDS_OFF(1<<LED_3);
             m_is_connected = false;
+            m_is_connectable_adv = false;
             all_advertising_halt();
 
             err_code = eddystone_security_eid_states_preserve();
@@ -185,6 +191,8 @@ void eddystone_advertising_manager_on_ble_evt( ble_evt_t * p_ble_evt )
             if (p_ble_evt->evt.gap_evt.params.timeout.src == BLE_GAP_TIMEOUT_SRC_ADVERTISING)
             {
                 //When connectable advertising times out, switch back to Non-connectable
+                bsp_indication_set(BSP_INDICATE_IDLE);
+                LEDS_OFF(1<<LED_3);
                 m_is_connectable_adv = false;
                 slots_advertising_start();
             }
@@ -433,6 +441,17 @@ static void adv_slot_timeout(void * p_context)
     if(slot_no != 0xFF)
     {
     sd_ble_gap_adv_stop();
+
+        static uint8_t tick_tock = 0;
+        tick_tock++;
+        if (tick_tock % 2 == 0)
+        {
+            LEDS_ON(1<<LED_1);
+        }
+        else
+        {
+            LEDS_OFF(1<<LED_1);
+        }
 
         eddystone_adv_slot_params_t adv_slot_params;
         eddystone_adv_slot_params_get(slot_no, &adv_slot_params);

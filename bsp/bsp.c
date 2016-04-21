@@ -234,11 +234,12 @@ static uint32_t bsp_led_indication(bsp_indication_t indicate)
         case BSP_INDICATE_IDLE:
             LEDS_OFF(LEDS_MASK & ~m_alert_mask);
             m_stable_state = indicate;
+            app_timer_stop(m_leds_timer_id);
             break;
 
         case BSP_INDICATE_SCANNING:
         case BSP_INDICATE_ADVERTISING:
-            LEDS_OFF(LEDS_MASK & ~BSP_LED_0_MASK & ~m_alert_mask);
+            //LEDS_OFF(LEDS_MASK & ~BSP_LED_0_MASK & ~m_alert_mask);
 
             // in advertising blink LED_0
             if (LED_IS_ON(BSP_LED_0_MASK))
@@ -349,8 +350,8 @@ static uint32_t bsp_led_indication(bsp_indication_t indicate)
             break;
 
         case BSP_INDICATE_CONNECTED:
-            LEDS_OFF(LEDS_MASK & ~BSP_LED_0_MASK & ~m_alert_mask);
-            LEDS_ON(BSP_LED_0_MASK);
+            LEDS_OFF(LEDS_MASK & ~BSP_LED_1_MASK & ~m_alert_mask);
+            LEDS_ON(BSP_LED_1_MASK);
             m_stable_state = indicate;
             break;
 
