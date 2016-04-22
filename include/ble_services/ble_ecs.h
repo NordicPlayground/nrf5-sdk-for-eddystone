@@ -9,6 +9,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#define BLE_UUID_ECS_SERVICE                    0x7500
 
 //Eddystone GATT characteristic data types for easy handling of char. data
 
@@ -203,5 +204,7 @@ uint32_t ble_ecs_init(ble_ecs_t * p_ecs, const ble_ecs_init_t * p_ecs_init);
  * @param[in] p_ble_evt   Event received from the S110 SoftDevice.
  */
 void ble_ecs_on_ble_evt(ble_ecs_t * p_ecs, ble_evt_t * p_ble_evt);
+
+
 
 #endif //BLE_ECS_H__

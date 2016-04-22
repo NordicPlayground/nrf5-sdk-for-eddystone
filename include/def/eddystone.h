@@ -11,6 +11,7 @@
 
 /*Eddystone specific defs*/
 #define EDDYSTONE_UUID              			0xFEAA                            /**< UUID for Eddystone beacons according to specification. */
+
 #define EDDYSTONE_UID_FRAME_TYPE    			0x00                              /**< UID frame type is fixed at 0x00. */
 #define EDDYSTONE_UID_RFU           			0x00, 0x00                        /**< Reserved for future use according to specification. */
 

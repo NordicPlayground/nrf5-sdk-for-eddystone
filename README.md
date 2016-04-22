@@ -5,6 +5,7 @@ This is an example implementation of the Eddystone GATT Configuration Service fo
 <img src="https://github.com/google/eddystone/blob/master/branding/assets/png/EddyStone_final-01.png" alt="Eddystone logo" width="300px" align="middle">
 
 #### Table of contents
+* [Release note](#release-note)
 * [Introduction](#introduction)
 * [Supported characteristics](#supported-characteristics)
 * [Requirements](#requirements)
@@ -16,6 +17,18 @@ This is an example implementation of the Eddystone GATT Configuration Service fo
 * [Third-party crypto libraries](#third-party-cryptolibraries)
 * [About](#about)
 * [License](#license)
+
+## Release note
+* __v0.6__ (April 21 2016)
+    * Revamped folder structures and project setup procedure to allow for better user setup experience. Namely the downloading of SDK via scripts. Details described below in [How to install](#how-to-install).
+    * Merged in cifra crypto library's fix for a [known issue](https://github.com/ctz/cifra/issues/3) with EAX encryption of the eTLM frames. Now eTLM frames are properly encrypted.
+    * Fixed a bug with the EID slot 4-byte clock being slow.
+    * Added scan response capability when the beacon is put into connectable mode which contains `nRF5_Eddy` as the device name and the Eddystone Configuration GATT Service UUID `a3c87500-8ed3-4bdf-8a39-a01bebede295` as the UUID in the scan response packet, as recommended by the latest [spec](https://github.com/google/eddystone/tree/master/configuration-service) from Google.
+    * Improved LED Indication for different beacon states: Advertising, Advertising in connectable mode, Connected. Details below in [How to use](#how-to-use).
+
+* __v0.5__ (April 15 2016)
+    * First public release
+
 
 ## Introduction
 The new Eddystone GATT Configuration Service enables simple configuration of beacons. The user can configure the beacon to broadcast all Eddystone frame types:
@@ -43,7 +56,7 @@ By randomizing and never sending the Unlock Key in clear text it is difficult to
 Eddystone-EIDs randomize the device ID of the beacon as well as the encrypted advertising data. Since there are no constant values to track it will be difficult if not impossible to track the location of a single beacon over any significant time period.
 
 > **IMPORTANT**
- In order to have all the security benefits of Eddystone-EID and Eddystone-eTLM refrain from configuring other frame types while broadcasting.
+ In order to have all the security benefits of Eddystone-EID and Eddystone-eTLM refrain from configuring other non-secure frame types while broadcasting these secure frame types
 
 
 ## Supported characteristics
@@ -68,7 +81,6 @@ Characteristic | Name | Status
 ## Prerequisites
 
 #### Software
-* [nRF5 SDK 11](http://developer.nordicsemi.com/nRF5_SDK/nRF5_SDK_v11.x.x/)
 * [Keil uVision 5 IDE](https://www.keil.com/demo/eval/arm.htm) (Note: you must have a registered version of Keil in order to compile source code that generates more than 32kB of code and data, currently this project generates 39 kB even with -O3 optimization level)
 * [Git Bash](https://git-scm.com/downloads)
 * [nRFgo Studio](https://www.nordicsemi.com/eng/nordic/Products/nRFgo-Studio/nRFgo-Studio-Win64/14964)
@@ -82,7 +94,6 @@ The application might work with other versions of the SDK/Keil but some modifica
 ## Known issues
 * Only Keil is supported for now. GCC and IAR are scheduled for a future release.
 * Only Windows development environment is supported for now. Linux and OSX are scheduled for a later release. You may still flash the firmware using the [Quick start](#quick-start) guide.
-* eTLM encryption library has a known [issue](https://github.com/ctz/cifra/issues/3).
 * After an Eddystone-EID slot is configured it will be preserved after power cycling. However, if you try to read the ECDH key again from the characteristic it will not be available. Slots containing other frame types are not preserved after power cycling.
 * When compiling there are warnings from the third-party crypto libraries.
 
@@ -93,42 +104,62 @@ This is the recommended approach if you just want to get started quickly without
 
 *  Connect the nRF52 DK to your computer. It will show up as a JLINK USB drive.
 
-*  Download the `nrf5_sdk_for_eddystone_v0.5.hex` file in the hex folder in this repository.
+*  Download the `nrf5_sdk_for_eddystone_v0.6.hex` file in the hex folder in this repository.
 
-*  Drag and drop the `nrf5_sdk_for_eddystone_v0.5.hex` file on the JLINK drive to automatically program the nRF52 DK.
+*  Drag and drop the `nrf5_sdk_for_eddystone_v0.6.hex` file on the JLINK drive to automatically program the nRF52 DK.
 
 *  Install the nRF Beacon for Eddystone Android App from [Play Store](https://play.google.com/store/apps/details?id=no.nordicsemi.android.nrfbeacon.nearby).
 
 *  Follow the [instructions on how to use the App](https://github.com/NordicSemiconductor/Android-nRF-Beacon-for-Eddystone).
 
 #### Compile from source
-*  Download the [nRF5 Software Development Kit v11](http://developer.nordicsemi.com/nRF5_SDK/nRF5_SDK_v11.x.x/) and extract to a suitable location. We recommend placing it close to root to avoid problems related to long folder and file names.
 
-*  Clone this repository into the SDK under ...nRF5_SDK_11.0.0_xxxxxxx\examples\ble_peripheral
+*  Clone this repository into your preferred location (keep it close to root to avoid path too long problem on Windows, because the SDK will be downloaded via a script into the same parent directory as well)
 ```
 git clone https://github.com/NordicSemiconductor/nrf5-sdk-for-eddystone.git
 ```
-So the resulting folder structure looks like this:
+* In the `nrf5-sdk-for-eddystone\setup_scripts` folder, you will find several bash/batch scripts that will help you set up the repository with the necessary components in order for Keil to compile the project. The 2 scripts that are of interest to the user are `download_sdk_setup.sh` and `existing_sdk_setup.sh`:
+    *  Run the `download_sdk_setup.sh` script if you don't already have `nRF5_SDK_11.0.0_89a8197`. This script will automatically download the required nRF5 SDK into the parent folder ( so that `nRF5_SDK_11.0.0_89a8197` lives right next to `nrf5-sdk-for-eddystone`), create necessary symlinks into the SDK for Keil to find the required components, and also clone the required third party crypto libraries from Github.
+    * If you already have `nRF5_SDK_11.0.0_89a8197` on your machine, then simply open `existing_sdk_setup.sh` in your favourite text editor and edit the line
+    ```
+    export SDK_PATH=""
+    ```
+    and fill in the absolute path to your existing SDK folder, as such:
+    ```
+    e.g. SDK_PATH="C:/example_path/nRF5_SDK_11.0.0_89a8197"
+    ```
+    then save it and run the script. It will do the same things as the `download_sdk_setup.sh`, except not downloading the SDK of course.
+
+* If everything goes smoothly, you should find the following additional components in the `nrf5-sdk-for-eddystone`, indicated with ** :
 ```
-examples
-        ble_peripheral
-                ble_app_alert_notification
-                ble_app_ancs_c
-                ble_app_beacon
-                ....
-                nrf_sdk_for_eddystone
+Some_parent_folder
+        nRF5_SDK_11.0.0_89a8197 (would be here if you ran download_sdk_setup.sh)
+        nrf5-sdk-for-eddystone
+                                bsp
+                                hex
+                                include
+                                project
+                              **sdk_components
+                              **sdk_external
+                                setup_scripts
+                                source
+                                     ble_services
+                                   **crypto_libs
+                                     modules
+                                .gitignore
+                                licenses.txt
+                                README.md
 ```
-*  Run the `crypto_setup_all.sh` script in the `nrf5_sdk_for_eddystone\source` folder. This will clone and configure third-party cryptographic libraries.
 
 *  Open the .uvprojx project file in Keil, which is found here:
 ```
 nrf5-sdk-for-eddystone\project\pca10040_s132\arm5_no_packs
 ```
-*  The project is expected to compile with 2 warnings coming from one of the crypto libraries
+*  The project is expected to compile with 2 warnings coming from one of the crypto libraries. You might also need to download NordicSemiconductor::nRF_DeviceFamilyPack 8.3.1 in Keil's Pack Installer if you don't already have it before the project can compile
 
 *  Before loading the firmware onto your nRF52 DK or starting a debug session in Keil, you must flash in the S132 Softdevice that can be found here:
 ```
-components\softdevice\s132\hex\s132_nrf52_2.0.0_softdevice.hex
+sdk_components\softdevice\s132\hex\s132_nrf52_2.0.0_softdevice.hex
 ```
 The Softdevice can be flashed in with Nordic's [nRFgo Studio](https://www.nordicsemi.com/eng/nordic/Products/nRFgo-Studio/nRFgo-Studio-Win64/14964) tool. For instructions on how to use nRFgo Studio, follow the tutorial here under the [Preparing the Development Kit](https://devzone.nordicsemi.com/tutorials/2/) section.
 
@@ -136,6 +167,13 @@ The Softdevice can be flashed in with Nordic's [nRFgo Studio](https://www.nordic
 After flashing the firmware to a nRF52 DK it will automatically start broadcasting a Eddystone-URL pointing to http://www.nordicsemi.com, with LED 1 blinking. In order to configure the beacon to broadcast a different URL or a different frame type it is necessary to put the DK in configuration mode by pressing Button 1 on the DK so it starts advertising in "Connectable Mode". After that, it can be connected to nRF Beacon for Eddystone app, which allows the writing of the Lock Key to the Unlock Characteristic.
 
 Please note that after pressing Button 1, the DK will only broadcast in "Connectable Mode" for 1 minute. After which, you must press Button 1 again if you did not manage to connect in time with the App.
+
+###### LED Indications:
+| LED No.       | LED State       | Beacon State  |
+| ------------- |:-------------:| -----:|
+| LED 1     | Blinking | Advertising |
+| LED 2        | On      |   Connected to Central |
+| LED 3 | On     |    Advertising in Connectable Mode |
 
 Detailed instructions on how to use the App is available in the [nRF Beacon for Eddystone GitHub repository](https://github.com/NordicSemiconductor/Android-nRF-Beacon-for-Eddystone).
 
@@ -175,4 +213,4 @@ portion that originates from third-parties.
 
     - crypto_libs
 
-Note: The crypto_libs folder is not included in this repository but is created by running the crypto_setup script.
+Note: The crypto_libs folder is not included in this repository but is created by running the setup script.

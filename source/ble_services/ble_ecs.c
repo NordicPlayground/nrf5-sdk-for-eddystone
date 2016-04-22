@@ -14,7 +14,6 @@
 #endif
 
 /*ECS UUIDs*/
-#define BLE_UUID_ECS_SERVICE                    0x7500
 #define BLE_UUID_ECS_BRDCST_CAP_CHAR            0x7501
 #define BLE_UUID_ECS_ACTIVE_SLOT_CHAR           0x7502
 #define BLE_UUID_ECS_ADV_INTRVL_CHAR            0x7503

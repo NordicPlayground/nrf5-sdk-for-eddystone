@@ -130,7 +130,7 @@ static void ble_stack_init(void)
     lf_clock_config.rc_ctiv = 0;
     lf_clock_config.rc_temp_ctiv = 0;
     lf_clock_config.xtal_accuracy = NRF_CLOCK_LF_XTAL_ACCURACY_20_PPM;
-    
+
     // Initialize the SoftDevice handler module.
     SOFTDEVICE_HANDLER_INIT(&lf_clock_config, NULL);
 
@@ -154,6 +154,60 @@ static void ble_stack_init(void)
     //Subscribe for System events.
     err_code = softdevice_sys_evt_handler_set(sys_evt_dispatch);
     APP_ERROR_CHECK(err_code);
+}
+
+
+/**@brief Function for the GAP initialization.
+*
+* @details This function will set up all the necessary GAP (Generic Access Profile) parameters of
+*          the device. It also sets the permissions and appearance.
+*/
+static void gap_params_init(void)
+{
+   uint32_t                err_code;
+   ble_gap_conn_params_t   gap_conn_params;
+   ble_gap_conn_sec_mode_t sec_mode;
+
+   uint8_t                 device_name[] = APP_DEVICE_NAME;
+
+   BLE_GAP_CONN_SEC_MODE_SET_OPEN(&sec_mode);
+
+   err_code = sd_ble_gap_device_name_set(&sec_mode,
+                                         device_name,
+                                         strlen((const char *)device_name));
+   APP_ERROR_CHECK(err_code);
+
+   memset(&gap_conn_params, 0, sizeof(gap_conn_params));
+
+   gap_conn_params.min_conn_interval = MIN_CONN_INTERVAL;
+   gap_conn_params.max_conn_interval = MAX_CONN_INTERVAL;
+   gap_conn_params.slave_latency     = SLAVE_LATENCY;
+   gap_conn_params.conn_sup_timeout  = CONN_SUP_TIMEOUT;
+
+   err_code = sd_ble_gap_ppcp_set(&gap_conn_params);
+
+   APP_ERROR_CHECK(err_code);
+}
+
+/**@brief Function for initializing the Connection Parameters module.
+ */
+static void conn_params_init(void)
+{
+    uint32_t               err_code;
+    ble_conn_params_init_t cp_init;
+
+    memset(&cp_init, 0, sizeof(cp_init));
+
+    cp_init.p_conn_params                  = NULL;
+    cp_init.first_conn_params_update_delay = FIRST_CONN_PARAMS_UPDATE_DELAY;
+    cp_init.next_conn_params_update_delay  = NEXT_CONN_PARAMS_UPDATE_DELAY;
+    cp_init.max_conn_params_update_count   = MAX_CONN_PARAMS_UPDATE_COUNT;
+    cp_init.start_on_notify_cccd_handle    = BLE_GATT_HANDLE_INVALID;
+    cp_init.disconnect_on_fail             = false;
+
+    err_code = ble_conn_params_init(&cp_init);
+    APP_ERROR_CHECK(err_code);
+
 }
 
 static void reset_active_slot(void)
@@ -284,7 +338,7 @@ static void ble_eddystone_security_cb(uint8_t slot_no,
     ret_code_t err_code;
     static ble_gatts_value_t   value;
     ble_ecs_lock_state_read_t unlock = BLE_ECS_LOCK_STATE_UNLOCKED;
-    
+
     ble_gap_addr_t new_address;
     new_address.addr_type = BLE_GAP_ADDR_TYPE_PUBLIC;
 
@@ -812,6 +866,10 @@ void eddystone_ble_init()
     __DSB();
     __ISB();
     #endif
+
+    gap_params_init();
+    conn_params_init();
+
     services_and_modules_init();
-    eddystone_advertising_manager_init();
+    eddystone_advertising_manager_init(m_ble_ecs.uuid_type);
 }

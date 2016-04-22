@@ -18,6 +18,7 @@
 #define SCHED_QUEUE_SIZE                                10
 
 //BLE CONFIGS
+#define APP_DEVICE_NAME                                 "nRF5-Eddy"
 #define IS_SRVC_CHANGED_CHARACT_PRESENT                 0                                 /**< Include the service changed characteristic. If not enabled, the server's database cannot be changed for the lifetime of the device. */
 
 #define CENTRAL_LINK_COUNT                              0                                 /**<number of central links used by the application. When changing this number remember to adjust the RAM settings*/
@@ -30,6 +31,15 @@
 
 #define DEFAULT_NON_CONNECTABLE_TX_POWER                0
 #define DEFAULT_CONNECTABLE_TX_POWER                    0
+
+#define MIN_CONN_INTERVAL                               MSEC_TO_UNITS(50, UNIT_1_25_MS)             /**< Minimum acceptable connection interval (20 ms), Connection interval uses 1.25 ms units. */
+#define MAX_CONN_INTERVAL                               MSEC_TO_UNITS(90, UNIT_1_25_MS)             /**< Maximum acceptable connection interval (75 ms), Connection interval uses 1.25 ms units. */
+#define SLAVE_LATENCY                                   0                                           /**< Slave latency. */
+#define CONN_SUP_TIMEOUT                                MSEC_TO_UNITS(4000, UNIT_10_MS)             /**< Connection supervisory timeout (4 seconds), Supervision Timeout uses 10 ms units. */
+#define FIRST_CONN_PARAMS_UPDATE_DELAY                  APP_TIMER_TICKS(5000, APP_TIMER_PRESCALER)  /**< Time from initiating event (connect or start of notification) to first time sd_ble_gap_conn_param_update is called (5 seconds). */
+#define NEXT_CONN_PARAMS_UPDATE_DELAY                   APP_TIMER_TICKS(30000, APP_TIMER_PRESCALER) /**< Time between each call to sd_ble_gap_conn_param_update after the first call (30 seconds). */
+#define MAX_CONN_PARAMS_UPDATE_COUNT                    3                                           /**< Number of attempts before giving up the connection parameter negotiation. */
+
 
 //EDDYSTONE CONFIGS
 #define APP_MAX_ADV_SLOTS                               5
@@ -57,13 +67,6 @@
 #define APP_EDDYSTONE_URL_URL           0x6e, 0x6f, 0x72, 0x64, \
                                         0x69, 0x63, 0x73, 0x65, \
                                         0x6d,0x69, 0x00                   /**< "nordicsemi.com". Last byte suffix 0x00 = ".com" according to specification. */
-// Eddystone TLM data
-#define APP_EDDYSTONE_TLM_FRAME_TYPE    0x20                              /**< TLM frame type is fixed at 0x20. */
-#define APP_EDDYSTONE_TLM_VERSION       0x00                              /**< TLM version might change in the future to accommodate other data according to specification. */
-#define APP_EDDYSTONE_TLM_BATTERY       0x00, 0xF0                        /**< Mock value. Battery voltage in 1 mV per bit. */
-#define APP_EDDYSTONE_TLM_TEMPERATURE   0x0F, 0x00                        /**< Mock value. Temperature [C]. Signed 8.8 fixed-point notation. */
-#define APP_EDDYSTONE_TLM_ADV_COUNT     0x00, 0x00, 0x00, 0x00            /**< Running count of advertisements of all types since power-up or reboot. */
-#define APP_EDDYSTONE_TLM_SEC_COUNT     0x00, 0x00, 0x00, 0x00            /**< Running count in 0.1 s resolution since power-up or reboot. */
 
 #define DEFAULT_FRAME_TYPE                      APP_EDDYSTONE_URL_FRAME_TYPE
 #define DEFAULT_FRAME_DATA                      {APP_EDDYSTONE_URL_SCHEME, APP_EDDYSTONE_URL_URL} /**Should mimic the data that would be written to

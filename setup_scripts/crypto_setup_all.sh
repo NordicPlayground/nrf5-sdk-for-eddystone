@@ -2,6 +2,8 @@
 # v0.9
 set -e
 
+cd ../source
+
 echo "Cloning Repositories..."
 git clone "https://github.com/massar/rfc6234.git" "crypto_libs/temp/rfc6234"
 cd crypto_libs/temp/rfc6234
@@ -11,8 +13,6 @@ cd ../../..
 git clone "https://github.com/ctz/cifra.git" "crypto_libs/temp/cifra"
 cd crypto_libs/temp/cifra
 git checkout a4c29ed77990c8427e7cb8aabf3162e99c1e5daa
-#Cifra EAX library fix
-git cherry-pick 82d77cd8323f6d4473fcb68517752a778970138d
 cd ../../..
 
 git clone "https://weave.googlesource.com/weave/libuweave" "crypto_libs/temp/tiny-aes128"

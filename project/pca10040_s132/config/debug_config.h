@@ -5,7 +5,7 @@
 // #define ADV_DEBUG
 // #define GATT_DEBUG
 // #define FLASH_DEBUG
-// #define SECURITY_DEBUG
+#define SECURITY_DEBUG
 // #define TLM_DEBUG
 // #define ERASE_FLASH_ON_REBOOT
 
