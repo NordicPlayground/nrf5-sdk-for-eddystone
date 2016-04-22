@@ -25,6 +25,7 @@ This is an example implementation of the Eddystone GATT Configuration Service fo
     * Fixed a bug with the EID slot 4-byte clock being slow.
     * Added scan response capability when the beacon is put into connectable mode which contains `nRF5_Eddy` as the device name and the Eddystone Configuration GATT Service UUID `a3c87500-8ed3-4bdf-8a39-a01bebede295` as the UUID in the scan response packet, as recommended by the latest [spec](https://github.com/google/eddystone/tree/master/configuration-service) from Google.
     * Improved LED Indication for different beacon states: Advertising, Advertising in connectable mode, Connected. Details below in [How to use](#how-to-use).
+    * Improved connection stability with "Error 133" commonly seen on Samsungs by adding the Peripheral Preferred Connection Parameters characteristic
 
 * __v0.5__ (April 15 2016)
     * First public release
