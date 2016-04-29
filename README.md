@@ -19,9 +19,18 @@ This is an example implementation of the Eddystone GATT Configuration Service fo
 * [License](#license)
 
 ## Release note
+* __v0.7__ (April 29 2016)
+
+    * Added persistent slot configurations feature so that after power loss or intentional reset of the chip, all previously configured slots will be restored from flash memory. Note that in order for slots to be saved to flash memory, a BLE Disconnect event must occur before any accidental or intentional power loss.
+    * EID clock values are now written to flash memory every 24 hours as recommended by Google's [spec](https://github.com/google/eddystone/blob/master/eddystone-eid/eid-computation.md) for recovering from power loss regarding EID computation.
+    * Merged in via script the cifra crypto library's fix for a [known issue](https://github.com/ctz/cifra/issues/3) with EAX encryption of the eTLM frames. Now eTLM frames are properly encrypted. Make sure to run `crypto_setup_all.sh` so the correct commits are checked out. 
+    * Added a stand-alone application hex file without the softdevice merged in so it can be DFUed with a bootloader.
+    * Other small stability improvements, bug fixes, and house cleaning.
+
+
 * __v0.6__ (April 21 2016)
     * Revamped folder structures and project setup procedure to allow for better user setup experience. Namely the downloading of SDK via scripts. Details described below in [How to install](#how-to-install).
-    * Merged in cifra crypto library's fix for a [known issue](https://github.com/ctz/cifra/issues/3) with EAX encryption of the eTLM frames. Now eTLM frames are properly encrypted.
+    * ~~Merged in cifra crypto library's fix for a [known issue](https://github.com/ctz/cifra/issues/3) with EAX encryption of the eTLM frames. Now eTLM frames are properly encrypted.~~
     * Fixed a bug with the EID slot 4-byte clock being slow.
     * Added scan response capability when the beacon is put into connectable mode which contains `nRF5_Eddy` as the device name and the Eddystone Configuration GATT Service UUID `a3c87500-8ed3-4bdf-8a39-a01bebede295` as the UUID in the scan response packet, as recommended by the latest [spec](https://github.com/google/eddystone/tree/master/configuration-service) from Google.
     * Improved LED Indication for different beacon states: Advertising, Advertising in connectable mode, Connected. Details below in [How to use](#how-to-use).
@@ -94,9 +103,7 @@ The application might work with other versions of the SDK/Keil but some modifica
 ## Known issues
 * Only Keil is supported for now. GCC and IAR are scheduled for a future release.
 * Only Windows development environment is supported for now. Linux and OSX are scheduled for a later release. You may still flash the firmware using the [Quick start](#quick-start) guide.
-* After an Eddystone-EID slot is configured it will be preserved after power cycling. However, if you try to read the ECDH key again from the characteristic it will not be available. Slots containing other frame types are not preserved after power cycling.
 * When compiling there are warnings from the third-party crypto libraries.
-
 
 ## How to install
 #### Quick start
@@ -104,9 +111,9 @@ This is the recommended approach if you just want to get started quickly without
 
 *  Connect the nRF52 DK to your computer. It will show up as a JLINK USB drive.
 
-*  Download the `nrf5_sdk_for_eddystone_v0.6.hex` file in the hex folder in this repository.
+*  Download the `nrf5_sdk_for_eddystone_v0.7.hex` file in the hex folder in this repository.
 
-*  Drag and drop the `nrf5_sdk_for_eddystone_v0.6.hex` file on the JLINK drive to automatically program the nRF52 DK.
+*  Drag and drop the `nrf5_sdk_for_eddystone_v0.7.hex` file on the JLINK drive to automatically program the nRF52 DK.
 
 *  Install the nRF Beacon for Eddystone Android App from [Play Store](https://play.google.com/store/apps/details?id=no.nordicsemi.android.nrfbeacon.nearby).
 
