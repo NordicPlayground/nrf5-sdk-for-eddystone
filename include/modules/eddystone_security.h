@@ -7,10 +7,11 @@
 
 typedef enum
 {
-    EDDYSTONE_SECURITY_MSG_UNLOCKED,     /**< Beacon is Unlocked*/
-    EDDYSTONE_SECURITY_MSG_EID,      /**< EID has been generated*/
-    EDDYSTONE_SECURITY_MSG_IK,       /**< IK has been generated */
-    EDDYSTONE_SECURITY_MSG_ECDH      /**< Public ECDH has been generated*/
+    EDDYSTONE_SECURITY_MSG_UNLOCKED,        /**< Beacon is Unlocked*/
+    EDDYSTONE_SECURITY_MSG_EID,             /**< EID has been generated*/
+    EDDYSTONE_SECURITY_MSG_IK,              /**< IK has been generated */
+    EDDYSTONE_SECURITY_MSG_ECDH,            /**< Public ECDH has been generated*/
+    EDDYSTONE_SECURITY_MSG_STORE_TIME       /**< EID slot time needs to be stored*/
 } eddystone_security_msg_t;
 
 typedef void (*eddystone_security_msg_cb_t)(uint8_t slot_no,
@@ -18,8 +19,16 @@ typedef void (*eddystone_security_msg_cb_t)(uint8_t slot_no,
 typedef struct
 {
     eddystone_security_msg_cb_t    msg_cb;  /**< Callback function pointer used by the security module to pass out events*/
-    uint8_t                        eid_slots_max;
 } eddystone_security_init_t;
+
+/**@brief structure to restore an EID slot*/
+typedef PACKED(struct)
+{
+    eddystone_frame_type_t frame_type;
+    uint8_t                k_scaler;
+    uint32_t               seconds;
+    uint8_t                ik[ECS_AES_KEY_SIZE];
+} eddystone_eid_config_t;
 
 typedef ble_ecs_lock_state_read_t eddystone_security_lock_state_t;
 
@@ -31,7 +40,7 @@ ret_code_t eddystone_security_init (eddystone_security_init_t * p_cb_init);
 
 /**@brief Updates the new lock code and puts it into flash
  * @param[in] p_ecrypted_key       pointer to new lock code
- * @retval see @ref eddystone_key_flash_store
+ * @retval see @ref eddystone_flash_ik_store
  */
 ret_code_t eddystone_security_lock_code_update( uint8_t * p_ecrypted_key );
 
@@ -95,19 +104,33 @@ uint8_t eddystone_security_scaler_get( uint8_t slot_no );
 */
 void eddystone_security_eid_get( uint8_t slot_no, uint8_t * p_eid_buffer );
 
-/**@brief Destroy stored EID states - should be called when the slot if overwritten as another slot, or cleared by 0s
+/**@brief Function to restore EID slot
+* @param[in] slot_no        the index of the slot to restore
+* @param[in] p_restore_data  pointer to the restore data structure
+*/
+void eddystone_security_eid_slots_restore( uint8_t slot_no, eddystone_eid_config_t * p_restore_data );
+
+/**@brief Destroy stored EID states - should be called when the slot if overwritten as another slot, or cleared by empty byte/single 0
  * @param[in] slot_no  the index of the slot to destroy
  */
-void eddystone_security_eid_state_destroy( uint8_t slot_no );
+void eddystone_security_eid_slot_destroy( uint8_t slot_no );
 
-/**@brief Preserve EID states of all slots - write IK and scaler to flash
- * @retval see @ref eddystone_key_flash_store, @ref eddystone_scaler_flash_store
- * @retval see @ref eddystone_key_flash_clear, @ref eddystone_scaler_flash_store
+/**@brief Function for fetching the EID config */
+void eddystone_security_eid_config_get( uint8_t slot_no, eddystone_eid_config_t * p_config);
+
+/**@brief Preserve ECDH key pair by writing to flash
+ * @retval see @ref eddystone_flash_access_ecdh_key_pair
  */
-ret_code_t eddystone_security_eid_states_preserve( void );
+ret_code_t eddystone_security_ecdh_pair_preserve( void );
 
 /**@brief Copies the 16-byte EID ID Key into the buffer provided
  * @param[in]   slot_no         slot index of the EID slot whose IK will be retrieved
+ * @param[out]  p_key_buffer    buffer for the key
+ */
+void eddystone_security_plain_eid_id_key_get( uint8_t slot_no, uint8_t * p_key_buffer );
+
+/**@brief Copies the 16-byte LK encrypted EID ID Key into the buffer provided
+ * @param[in]   slot_no         slot index of the EID slot whose encrypted IK will be retrieved
  * @param[out]  p_key_buffer    buffer for the key
  */
 void eddystone_security_encrypted_eid_id_key_get( uint8_t slot_no, uint8_t * p_key_buffer );

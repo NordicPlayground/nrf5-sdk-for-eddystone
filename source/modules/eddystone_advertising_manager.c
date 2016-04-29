@@ -117,11 +117,12 @@ static void eddystone_ble_registr_adv_cb(void)
 
         uint8_array_t eddystone_data_array;                             // Array for Service Data structure.
 
-        fetch_adv_data_from_slot(0, &eddystone_data_array);
+        eddystone_data_array.size = 0;
+        eddystone_data_array.p_data = NULL;
 
         ble_advdata_service_data_t service_data;                        // Structure to hold Service Data.
         service_data.service_uuid = APP_EDDYSTONE_UUID;                 // Eddystone UUID to allow discoverability on iOS devices.
-        service_data.data = eddystone_data_array;                       // Array for service advertisement data.
+        service_data.data = eddystone_data_array;                                       // Array for service advertisement data.
 
         // Build and set advertising data.
         memset(&adv_data, 0, sizeof(adv_data));
@@ -160,7 +161,6 @@ static void eddystone_ble_registr_adv_cb(void)
  */
 void eddystone_advertising_manager_on_ble_evt( ble_evt_t * p_ble_evt )
 {
-    ret_code_t err_code;
     switch (p_ble_evt->header.evt_id)
     {
         case BLE_GAP_EVT_CONNECTED:
@@ -179,9 +179,6 @@ void eddystone_advertising_manager_on_ble_evt( ble_evt_t * p_ble_evt )
             m_is_connected = false;
             m_is_connectable_adv = false;
             all_advertising_halt();
-
-            err_code = eddystone_security_eid_states_preserve();
-            APP_ERROR_CHECK(err_code);
 
             adv_interval_timer_start();
             //Essentially gives 1 advertising interval's time for flash to write
@@ -319,13 +316,17 @@ static void adv_interval_timer_start(void)
 static void intervals_calculate(void)
 {
     //Buffers to hardcode a small shortening of the intervals just in case of any delays
-    //between all the running timers + encyrption processes of eTLMs so that each slot
+    //between all the running timer interrupts + encyrption processes of eTLMs so that each slot
     //has enough time to advertise before the next advertising interval comes around
-    const uint8_t etlm_dist_buffer_ms = 50;
-    const uint8_t slot_dist_buffer_ms = 50;
+
+    const uint8_t etlm_dist_buffer_ms = 25;
+    const uint8_t slot_dist_buffer_ms = 25;
+
+    /**@note From current measurements at Nordic we can see that eTLM encryption takes about 140 ms on the NRF52
+    Which means that the delay after the timer interrupt fires to advertise and the actual eTLM advertisement is 140 ms */
 
     const uint16_t SLOT_INTERVAL_LIMIT = 500; //Minimum interval between two slots in ms
-    const uint16_t ETLM_INTERVAL_LIMIT = 400;  //Minimum interval between two eTLMs on the same slot in ms
+    const uint16_t ETLM_INTERVAL_LIMIT = 300;  //Minimum interval between two eTLMs on the same slot in ms, must be > 140 ms
 
     //See if any slot is configured at all
     uint8_t no_of_currently_configed_slots = eddystone_adv_slot_num_of_configured_slots(m_currently_configured_slots);
@@ -335,6 +336,14 @@ static void intervals_calculate(void)
     eddystone_adv_slot_params_t adv_slot_0_params;
     eddystone_adv_slot_params_get(0, &adv_slot_0_params);
     m_intervals.adv_intrvl = adv_slot_0_params.adv_intrvl;
+
+    //Can happen when flash R/W for storing/loading slot configs did not behave as expected
+    //which can crash the app_timer_start
+    //TODO: might need a better error handling strategy for this...
+    if (m_intervals.adv_intrvl == 0)
+    {
+        m_intervals.adv_intrvl = 1000;
+    }
 
     if (no_of_currently_configed_slots == 0)
     {
@@ -350,7 +359,7 @@ static void intervals_calculate(void)
             ble_ecs_adv_intrvl_t adjusted_interval = (SLOT_INTERVAL_LIMIT + slot_dist_buffer_ms)*no_of_currently_configed_slots;
             m_intervals.adv_intrvl = adjusted_interval;
 
-            DEBUG_PRINTF(0,"ADV INTERVAL ADJUSTED BY ADV MGR: %d \r\n", adjusted_interval);
+            DEBUG_PRINTF(0,"1 - ADV INTERVAL ADJUSTED BY ADV MGR: %d \r\n", adjusted_interval);
             adjusted_interval = BYTES_SWAP_16BIT(adjusted_interval);
             eddystone_adv_slot_adv_intrvl_set(0, &adjusted_interval, true);
             m_intervals.slot_slot_interval = m_intervals.adv_intrvl/no_of_currently_configed_slots - slot_dist_buffer_ms;
@@ -372,7 +381,7 @@ static void intervals_calculate(void)
                 ble_ecs_adv_intrvl_t adjusted_interval = (m_intervals.slot_slot_interval + slot_dist_buffer_ms)*no_of_currently_configed_slots;
                 m_intervals.adv_intrvl = adjusted_interval;
 
-                DEBUG_PRINTF(0,"ADV INTERVAL ADJUSTED BY ADV MGR: %d \r\n", adjusted_interval);
+                DEBUG_PRINTF(0,"2 - ADV INTERVAL ADJUSTED BY ADV MGR: %d \r\n", adjusted_interval);
                 adjusted_interval = BYTES_SWAP_16BIT(adjusted_interval);
                 eddystone_adv_slot_adv_intrvl_set(0, &adjusted_interval, true);
 

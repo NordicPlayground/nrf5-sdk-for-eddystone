@@ -4,9 +4,9 @@
 
 
 
-#define GATT_DEBUG
+#define BLE_HANDLER_DEBUG
 
-#ifdef GATT_DEBUG
+#ifdef BLE_HANDLER_DEBUG
     #include "SEGGER_RTT.h"
     #define DEBUG_PRINTF SEGGER_RTT_printf
 #else
@@ -31,10 +31,10 @@
 {{0x95, 0xE2, 0xED, 0xEB, 0x1B, 0xA0, 0x39, 0x8A, 0xDF, 0x4B, 0xD3, 0x8E, 0x00, 0x00, 0xC8, 0xA3}}
 //A3C8XXXX-8ED3-4BDF-8A39-A01BEBEDE295
 
-//According to the spec, there are 6 bytes of data in addition to the supported_radio_tx_power array
+//According to the eddystone spec, there are 6 bytes of data in addition to the supported_radio_tx_power array
 #define BLE_ECS_BRDCST_CAP_LEN                  (ECS_NUM_OF_SUPORTED_TX_POWER + 6)
 
-/*Memory block for EID Long writes*/
+/*Memory block for ECDH key exchange long writes */
 #define EID_BUFF_SIZE 64
 static uint8_t m_eid_mem[EID_BUFF_SIZE] = {0};
 static ble_user_mem_block_t    m_eid_mem_block = {.p_mem = m_eid_mem, .len = EID_BUFF_SIZE};
@@ -49,7 +49,6 @@ static void on_connect(ble_ecs_t * p_ecs, ble_evt_t * p_ble_evt)
     p_ecs->conn_handle = p_ble_evt->evt.gap_evt.conn_handle;
 }
 
-
 /**@brief Function for handling the @ref BLE_GAP_EVT_DISCONNECTED event from the S132 SoftDevice.
  *
  * @param[in] p_ecs     Eddystone Configuration Service structure.
@@ -60,7 +59,6 @@ static void on_disconnect(ble_ecs_t * p_ecs, ble_evt_t * p_ble_evt)
     UNUSED_PARAMETER(p_ble_evt);
     p_ecs->conn_handle = BLE_CONN_HANDLE_INVALID;
 }
-
 
 /**@brief Function for handling the @ref BLE_GATTS_EVT_RW_AUTHORIZE_REQUEST: BLE_GATTS_AUTHORIZE_TYPE_WRITE event from the S132 SoftDevice.
  *
@@ -272,6 +270,7 @@ static uint32_t brdcst_cap_char_add(ble_ecs_t * p_ecs, const ble_ecs_init_t * p_
 
     memset(&attr_char_value, 0, sizeof(attr_char_value));
 
+    //Eddystone spec requires big endian
     ble_ecs_brdcst_cap_t temp = p_ecs_init->p_init_vals->brdcst_cap;
     temp.supp_frame_types = BYTES_SWAP_16BIT(temp.supp_frame_types);
 

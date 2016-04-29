@@ -42,9 +42,8 @@ static eddystone_tlm_frame_t m_tlm =
     //the rest are zeros by default
 };
 
-#define  MS_PER_TICK             ((1+APP_TIMER_PRESCALER)*1000)/32768
+#define  NS_PER_TICK             (1+APP_TIMER_PRESCALER)*30517
 #define  RTC1_TICKS_MAX          16777216
-APP_TIMER_DEF(m_tlm_timer);
 
 /**@brief Function for updating the ADV_SEC field of TLM*/
 static void eddystone_tlm_update_time(void)
@@ -52,12 +51,13 @@ static void eddystone_tlm_update_time(void)
     static uint32_t previous_tick = 0;
     uint32_t        current_tick = 0;
     uint32_t        tick_diff;
-    float           ms = 0;
-    static float    ms_remainder_from_seconds = 0;
-    static uint32_t le_time = 0; //Little endian
+    uint32_t        ms = 0;
+    static uint32_t ms_remainder = 0;
+    static uint32_t ns_remainder = 0;
+    static uint32_t le_time = 0; //Little endian time
     uint32_t        be_time = 0; //Big endian
 
-    app_timer_cnt_get(&current_tick);
+    APP_ERROR_CHECK(app_timer_cnt_get(&current_tick));
 
     if (current_tick > previous_tick)
     {
@@ -70,58 +70,65 @@ static void eddystone_tlm_update_time(void)
         tick_diff = current_tick + (RTC1_TICKS_MAX - previous_tick);
     }
 
-    //convert ticks to ms
-    ms = (float)((float)tick_diff*(float)MS_PER_TICK + ms_remainder_from_seconds);
+    uint32_t ns;
+    const uint32_t NS_PER_MS = 1000000;
 
-    //The eddystone spec requires 100 ms accuracy
-    if (ms >= 100)
+    ns = tick_diff*NS_PER_TICK;
+    ms = ns/NS_PER_MS;
+    ns_remainder += ns % NS_PER_MS;
+
+    if (ns_remainder >= NS_PER_MS)
     {
-        ms_remainder_from_seconds = ms - (uint32_t)(ms);
-        //In the first tick, ms will be >> 100, since previous_tick = 0. So only
-        //incrememnt the time by 1 tick.
+        ms += ns_remainder/NS_PER_MS;
+        ns_remainder = ns_remainder % NS_PER_MS;
+    }
+
+    const uint32_t RESOLUTION = 100;
+    //The eddystone spec requires 100 ms resolution, so only update the time when ms > 100
+    if (ms >= RESOLUTION)
+    {
+        ms_remainder += ms % RESOLUTION;
+        if (ms_remainder >= RESOLUTION)
+        {
+            ms += ms_remainder/RESOLUTION;
+            ms_remainder = ms_remainder % RESOLUTION;
+        }
+        //For very first function call, ms will be >> 100, since previous_tick = 0. So only
+        //incrememnt the time by 1.
         if (le_time == 0)
         {
             le_time++;
         }
         else
         {
-            le_time += (uint32_t)((ms)/100);
+            le_time += ((ms)/RESOLUTION);
         }
          be_time = BYTES_REVERSE_32BIT(le_time);
          memcpy(m_tlm.sec_cnt, &be_time, EDDYSTONE_TLM_SEC_CNT_LENGTH);
     }
     else
     {
-        ms_remainder_from_seconds = ms;
+        ms_remainder += ms;
     }
     previous_tick = current_tick;
 }
 
-static void tlm_timer_timeout(void * p_context)
-{
-    eddystone_tlm_update_time();
-}
-
 ret_code_t eddystone_tlm_manager_init(void)
 {
-    ret_code_t err_code;
-    err_code = app_timer_create(&m_tlm_timer,
-                     APP_TIMER_MODE_REPEATED,
-                     tlm_timer_timeout);
-    APP_ERROR_CHECK(err_code);
 
-    return app_timer_start(m_tlm_timer, APP_TIMER_TICKS(512000, APP_TIMER_PRESCALER), NULL);
+    eddystone_tlm_update_time(); //Increment the time right way during module init.
+    return NRF_SUCCESS;
 }
 
 /**@brief Function for updating the TEMP field of TLM*/
 static void eddystone_tlm_update_temp(void)
 {
     ret_code_t err_code;
-    const uint8_t  TLM_TEMP_INTERVAL = 20;
+    const uint8_t  TLM_TEMP_INTERVAL = 30;
     static uint8_t temp_counter = TLM_TEMP_INTERVAL - 1;
 
     //No need to get the temperature every time a TLM is broadcast since temperature
-    //is assumed to be pretty constant. Thus temperature is sampled every 20 times a
+    //is assumed to be pretty constant. Thus temperature is sampled every TLM_TEMP_INTERVAL times a
     //TLM is broadcast
     temp_counter++;
 

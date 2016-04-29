@@ -15,12 +15,14 @@
 #include "eddystone_adv_slot.h"
 #include "eddystone_security.h"
 #include "eddystone_registration_ui.h"
+#include "pstorage.h"
 #include "pstorage_platform.h"
+#include "eddystone_flash.h"
 #include "debug_config.h"
+#include "ble_ecs.h"
+#include "eddystone_advertising_manager.h"
 
-#define RANDOMIZE_MAC
-
-#ifdef GATT_DEBUG
+#ifdef BLE_HANDLER_DEBUG
     #include "SEGGER_RTT.h"
     #define DEBUG_PRINTF SEGGER_RTT_printf
 #else
@@ -54,6 +56,28 @@ static void on_ble_evt(ble_evt_t * p_ble_evt)
         case BLE_GAP_EVT_DISCONNECTED:
             m_conn_handle = BLE_CONN_HANDLE_INVALID;
             DEBUG_PRINTF(0,"Disconnected! \r\n",0);
+            //Writing all slot configs to NVM
+            eddystone_flash_flags_t flash_flag;
+            memset(&flash_flag, 0, sizeof(eddystone_flash_flags_t));
+
+            for (uint8_t i = 0; i < APP_MAX_ADV_SLOTS; i++)
+            {
+                eddystone_adv_slot_write_to_flash(i);
+
+                if (eddystone_adv_slot_is_configured(i))
+                {
+                    flash_flag.slot_is_empty[i] = false;
+                    DEBUG_PRINTF(0,"Slot [%d] Non-empty! \r\n",i);
+                }
+                else
+                {
+                    flash_flag.slot_is_empty[i] = true;
+                }
+            }
+            flash_flag.factory_state = false;
+            err_code = eddystone_flash_access_flags(&flash_flag, EDDYSTONE_FLASH_ACCESS_WRITE);
+            APP_ERROR_CHECK(err_code);
+
             switch (ble_eddystone_is_unlocked())
             {
                 case BLE_ECS_LOCK_STATE_UNLOCKED:
@@ -210,6 +234,9 @@ static void conn_params_init(void)
 
 }
 
+/**@brief Function to reset the active slot to 0
+ * @details This function will write to the active slot characteristic
+ */
 static void reset_active_slot(void)
 {
     ret_code_t err_code;
@@ -223,11 +250,7 @@ static void reset_active_slot(void)
     APP_ERROR_CHECK(err_code);
 }
 
-/**@brief Function to check if the beacon is unlocked.
- *
- * @details This function will fetch the appropriate fields in the broadcast capabilities
- *          characteristic to check for support
- */
+/**@brief Function to check if the beacon is unlocked.*/
 static ble_ecs_lock_state_read_t ble_eddystone_is_unlocked(void)
 {
     ret_code_t err_code;
@@ -325,9 +348,10 @@ static void ble_eddystone_lock_beacon(void)
 
 /**@brief Callback function to receive messages from the security module
  *
- * @details Need to be passed in during eddystone_security_init()
+ * @details Need to be passed in during eddystone_security_init(). The security
+ *          module will callback anytime a particular security process is completed
  * @params[in]  slot_no     Index of the slot
- * @params[in]  msg_type    Message type corersponding to different security items
+ * @params[in]  msg_type    Message type corersponding to different security components
  */
 static void ble_eddystone_security_cb(uint8_t slot_no,
                                       eddystone_security_msg_t msg_type)
@@ -358,8 +382,8 @@ static void ble_eddystone_security_cb(uint8_t slot_no,
             APP_ERROR_CHECK(err_code);
             break;
         case EDDYSTONE_SECURITY_MSG_EID:
+            //New EID was generated
             eddystone_adv_slot_eid_set(slot_no);
-
             #ifdef RANDOMIZE_MAC
             //Randomize the MAC address on every EID generation
             sd_rand_application_bytes_available_get(&bytes_available);
@@ -379,12 +403,14 @@ static void ble_eddystone_security_cb(uint8_t slot_no,
             DEBUG_PRINTF(0, "Encrypted Identity Key Ready! \r\n", 0);
             eddystone_security_encrypted_eid_id_key_get(slot_no, (uint8_t*)encrypted_id_key.key);
             //Set the EID ID key in the slot so it can be exposed in the characteristic
-            eddystone_adv_slot_eid_id_key_set(slot_no, &encrypted_id_key);
+            eddystone_adv_slot_encrypted_eid_id_key_set(slot_no, &encrypted_id_key);
             break;
 
         case EDDYSTONE_SECURITY_MSG_ECDH:
             DEBUG_PRINTF(0, "ECDH Pub Key Ready! \r\n", 0);
             eddystone_security_pub_ecdh_get(slot_no, (uint8_t *)pub_ecdh_key.key);
+
+            //Set the characteristic to the ECDH key value
             value.len = sizeof(ble_ecs_public_ecdh_key_t);
             value.offset = 0,
             value.p_value = (uint8_t *)pub_ecdh_key.key;
@@ -393,9 +419,17 @@ static void ble_eddystone_security_cb(uint8_t slot_no,
                                               &value);
             if (err_code != NRF_SUCCESS)
             {
-                __NOP();
+                APP_ERROR_CHECK(err_code);
             }
-            APP_ERROR_CHECK(err_code);
+            break;
+        case EDDYSTONE_SECURITY_MSG_STORE_TIME:
+            /**Every 24 hours any EID slots time is stored to flash to allow for power lock_state_handles
+            recovery. Only time needs to be stored, but just store the entire slot anyway for API simplicity*/
+            DEBUG_PRINTF(0, "Storing EID Time! \r\n", 0);
+            eddystone_adv_slot_write_to_flash(slot_no);
+            break;
+        default:
+            APP_ERROR_CHECK(NRF_ERROR_INVALID_PARAM); //Should never happen
             break;
     }
 }
@@ -418,7 +452,7 @@ static void ecs_write_evt_handler(ble_ecs_t *        p_ecs,
     ret_code_t                            err_code;
     ble_gatts_rw_authorize_reply_params_t reply;
     memset(&reply, 0, sizeof(reply));
-    bool long_write_overwrite_flag = false;
+    bool long_write_overwrite_flag = false; //Used for handling ECDH key long writes
 
     reply.type = BLE_GATTS_AUTHORIZE_TYPE_WRITE;
     reply.params.write.update      = 1;
@@ -482,7 +516,7 @@ static void ecs_write_evt_handler(ble_ecs_t *        p_ecs,
                 {
                     //0x00 + key[16] : transition to lock state and update the lock code
                     eddystone_security_lock_code_update((p_data)+1);
-                    //Only write the lock byte to the characteristic
+                    //Only write the lock byte (0x00) to the characteristic, so set length to 1
                     length = 1;
                 }
                 else
@@ -499,7 +533,7 @@ static void ecs_write_evt_handler(ble_ecs_t *        p_ecs,
                 slot_data.p_data = NULL;
                 slot_data.char_length = length;
             }
-            //client is clearing a slot with a single 0 or writing a TLM
+            //client is clearing a slot with a single 0 or is writing a TLM
             else if (length == 1)
             {
                 memcpy(&slot_data.frame_type, p_data, 1);
@@ -510,10 +544,10 @@ static void ecs_write_evt_handler(ble_ecs_t *        p_ecs,
             else
             {
                 memcpy(&slot_data.frame_type, p_data, 1);
-                slot_data.p_data =  (int8_t*)(p_data + 1);
+                slot_data.p_data =  (int8_t*)(p_data + 1); //offset by the frame_type length
                 slot_data.char_length = length;
             }
-                eddystone_adv_slot_rw_buffer_data_set(slot_no, &slot_data);
+            eddystone_adv_slot_rw_adv_data_set(slot_no, &slot_data);
                 break;
             //Long writes to the RW ADV Slot characteristic for configuring an EID frame
             //with an ECDH key exchange
@@ -551,7 +585,7 @@ static void ecs_write_evt_handler(ble_ecs_t *        p_ecs,
                 memcpy(&slot_data.frame_type, value.p_value, 1);
                 slot_data.p_data =  (int8_t*)(value.p_value + 1);
                 slot_data.char_length = ECS_ADV_SLOT_CHAR_LENGTH_MAX;
-                eddystone_adv_slot_rw_buffer_data_set(slot_no, &slot_data);
+                eddystone_adv_slot_rw_adv_data_set(slot_no, &slot_data);
 
                 break;
 
@@ -707,7 +741,7 @@ static void ecs_read_evt_handler(ble_ecs_t        * p_ecs,
 
                 reply.params.read.gatt_status = BLE_GATT_STATUS_SUCCESS;
 
-                if(eddystone_adv_slot_eid_id_key_get(slot_no, &eid_id_key) == NRF_ERROR_INVALID_STATE)
+                if(eddystone_adv_slot_encrypted_eid_id_key_get(slot_no, &eid_id_key) == NRF_ERROR_INVALID_STATE)
                 {
                     reply.params.read.gatt_status = BLE_GATT_STATUS_ATTERR_READ_NOT_PERMITTED;
                 }
@@ -720,7 +754,7 @@ static void ecs_read_evt_handler(ble_ecs_t        * p_ecs,
                 ble_ecs_rw_adv_slot_t  slot_data;
                 uint8_t buffer[ECS_ADV_SLOT_CHAR_LENGTH_MAX];
 
-                eddystone_adv_slot_rw_buffer_data_get(slot_no, &slot_data);
+                eddystone_adv_slot_rw_adv_data_get(slot_no, &slot_data);
                 buffer[0] = slot_data.frame_type;
                 //If non-empty slot
                 if (slot_data.char_length > 0 )
@@ -766,7 +800,7 @@ static void ecs_read_evt_handler(ble_ecs_t        * p_ecs,
     }
 
     //When the beacon is locked and the client is trying to access the unlock
-    //characteristic accept the read and call the cryptography function to check the validity
+    //characteristic accept the read and call the cryptography function to prepare for unlock
     else if (!ble_eddystone_is_unlocked() && (evt_type == BLE_ECS_EVT_UNLOCK))
     {
         uint8_t key_buff[ECS_AES_KEY_SIZE];
@@ -788,6 +822,40 @@ static void ecs_read_evt_handler(ble_ecs_t        * p_ecs,
         err_code = sd_ble_gatts_rw_authorize_reply(m_conn_handle, &reply);
         APP_ERROR_CHECK(err_code);
     }
+}
+
+/**@brief Function for handling pstorage events.*/
+static void eddystone_pstorage_cb_handler(  pstorage_handle_t * p_handle,
+                                            uint8_t             op_code,
+                                            uint32_t            result,
+                                            uint8_t *           p_data,
+                                            uint32_t            data_len )
+{
+        if (result == NRF_SUCCESS)
+        {
+            switch (op_code)
+            {
+                case PSTORAGE_STORE_OP_CODE:
+                    DEBUG_PRINTF(0," Flash Store Sucess \r\n", 0);
+                    break;
+                case PSTORAGE_LOAD_OP_CODE:
+                    DEBUG_PRINTF(0," Flash Load Sucess \r\n", 0);
+                    break;
+                case PSTORAGE_CLEAR_OP_CODE:
+                    DEBUG_PRINTF(0," Flash Clear Sucess \r\n", 0);
+                    break;
+                case PSTORAGE_UPDATE_OP_CODE:
+                    DEBUG_PRINTF(0," Flash Update Sucess \r\n", 0);
+                    break;
+                default:
+                    break;
+            }
+        }
+        else
+        {
+            DEBUG_PRINTF(0," Flash Fail \r\n", 0);
+            APP_ERROR_CHECK(result);
+        }
 }
 /**@brief Initialize the ECS with initial values for the characteristics and other necessary modules */
 static void services_and_modules_init(void)
@@ -829,8 +897,10 @@ static void services_and_modules_init(void)
 
     uint8_t eddystone_default_data[] = DEFAULT_FRAME_DATA;
     init_params.rw_adv_slot.frame_type = (eddystone_frame_type_t)(DEFAULT_FRAME_TYPE);
-    init_params.rw_adv_slot.p_data = (int8_t *)(eddystone_default_data);   //Without frametype
-    init_params.rw_adv_slot.char_length = sizeof(eddystone_default_data) + 1;
+    init_params.rw_adv_slot.p_data = (int8_t *)(eddystone_default_data);
+    init_params.rw_adv_slot.char_length = sizeof(eddystone_default_data) + 1; // plus the frame_type
+    //To set a TLM slot as default slot in firmware, just set the frame_type as TLM, and char_length as 1.
+    //And p_data as NULL
 
     init_params.factory_reset = 0;
     init_params.remain_cnntbl.r_is_non_connectable_supported = 1;
@@ -844,29 +914,25 @@ static void services_and_modules_init(void)
     err_code = ble_ecs_init(&m_ble_ecs, &ecs_init);
     APP_ERROR_CHECK(err_code);
 
-    //Initialize the slots with the initial values of the characteristics
-    eddystone_adv_slots_init(&ecs_init);
-
     //Initialize the security module
     eddystone_security_init_t security_init =
     {
         .msg_cb = ble_eddystone_security_cb,
-        .eid_slots_max = APP_MAX_EID_SLOTS
     };
+
+    err_code = eddystone_flash_init(eddystone_pstorage_cb_handler);
+    APP_ERROR_CHECK(err_code);
+
     err_code = eddystone_security_init(&security_init);
     APP_ERROR_CHECK(err_code);
+
+    //Initialize the slots with the initial values of the characteristics
+    eddystone_adv_slots_init(&ecs_init);
 }
 
 void eddystone_ble_init()
 {
     ble_stack_init();
-    /* Enable FPU again due to SD bug issue */
-    #if (__FPU_USED == 1)
-    SCB->CPACR |= (3UL << 20) | (3UL << 22);
-    __DSB();
-    __ISB();
-    #endif
-
     gap_params_init();
     conn_params_init();
 

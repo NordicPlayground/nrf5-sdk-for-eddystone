@@ -4,12 +4,9 @@
 #include <stdint.h>
 #include "app_util_platform.h"
 
-/*BLE Spec GAP defs in units of ms*/
-#define MAX_ADV_INTERVAL                       (10240)
-#define MIN_CONN_ADV_INTERVAL                  (20)
-#define MIN_NON_CONN_ADV_INTERVAL              (100)
+/*@file Contains definitions specific to edddystone frame types and data formats */
 
-/*Eddystone specific defs*/
+
 #define EDDYSTONE_UUID              			0xFEAA                            /**< UUID for Eddystone beacons according to specification. */
 
 #define EDDYSTONE_UID_FRAME_TYPE    			0x00                              /**< UID frame type is fixed at 0x00. */
@@ -108,5 +105,9 @@ typedef PACKED(struct)
     int8_t                  rfu;
 } eddystone_etlm_frame_t;
 
+/*BLE Spec GAP defs in units of ms*/
+#define MAX_ADV_INTERVAL                       (10240)
+#define MIN_CONN_ADV_INTERVAL                  (20)
+#define MIN_NON_CONN_ADV_INTERVAL              (100)
 
 #endif

@@ -16,240 +16,234 @@ static pstorage_handle_t m_pstorage_base_handle;
     #define DEBUG_PRINTF(...)
 #endif
 
-#define FLASH_OP_WAIT()     while (!m_flash_wait_flag_cleared){}
+#define NUM_OF_BLOCKS       APP_MAX_ADV_SLOTS + 4   /*see @eddystone_flash_init */
 
-static volatile bool m_flash_wait_flag_cleared = true;
-
-static uint8_t m_flash_scaler_buff[FLASH_BLOCK_SIZE] = {0};
-
-
-/**@brief Function for handling pstorage events. Clears the flash wait flag */
-static void eddystone_pstorage_handler( pstorage_handle_t * p_handle,
-                                        uint8_t             op_code,
-                                        uint32_t            result,
-                                        uint8_t *           p_data,
-                                        uint32_t            data_len )
+typedef PACKED(struct)
 {
-        if (result == NRF_SUCCESS)
-        {
-            m_flash_wait_flag_cleared = true;
-            switch (op_code)
-            {
-                case PSTORAGE_STORE_OP_CODE:
-                    DEBUG_PRINTF(0," Flash Store Sucess \r\n", 0);
-                    break;
-                case PSTORAGE_LOAD_OP_CODE:
-                    DEBUG_PRINTF(0," Flash Load Sucess \r\n", 0);
-                    break;
-                case PSTORAGE_CLEAR_OP_CODE:
-                    DEBUG_PRINTF(0," Flash Clear Sucess \r\n", 0);
-                    break;
-                case PSTORAGE_UPDATE_OP_CODE:
-                    DEBUG_PRINTF(0," Flash Update Sucess \r\n", 0);
-                    break;
-                default:
-                    break;
-            }
-        }
-        else
-        {
-            DEBUG_PRINTF(0," Flash Fail \r\n", 0);
-            APP_ERROR_CHECK(result);
-        }
-}
+    uint8_t buffer[FLASH_BLOCK_SIZE];
+} flash_buffers_t;
 
-uint32_t eddystone_scaler_flash_store(uint8_t slot_no, uint8_t scaler)
+static flash_buffers_t m_flash_buffers[NUM_OF_BLOCKS] = {0}; //pstorage write requires static buffer
+
+ret_code_t eddystone_flash_access_lock_key(uint8_t * p_lock_key, eddystone_flash_access_t access_type)
 {
-    uint32_t            err_code;
-    pstorage_handle_t   k_scaler_flash_handle;
-    uint8_t             scaler_block_offset = APP_MAX_ADV_SLOTS + 1;
-    pstorage_block_identifier_get(&m_pstorage_base_handle, scaler_block_offset, &k_scaler_flash_handle);
+    ret_code_t err_code;
+    pstorage_handle_t lock_key_handle;
+    const uint8_t blk_index = APP_MAX_ADV_SLOTS+2;
+    pstorage_block_identifier_get(&m_pstorage_base_handle, blk_index, &lock_key_handle);
 
-    memset(m_flash_scaler_buff + slot_no, scaler, 1);
-
-    DEBUG_PRINTF(0, "Storing K Scaler Slot: [%d] to NVM\r\n", slot_no);
-
-    m_flash_wait_flag_cleared = false;
-    err_code = pstorage_update(&k_scaler_flash_handle,
-                              m_flash_scaler_buff,
-                              FLASH_BLOCK_SIZE,
-                              0);
-    RETURN_IF_ERROR(err_code);
-
-    return NRF_SUCCESS;
-}
-
-uint32_t eddystone_scalers_flash_load( uint8_t * p_scalers_buff )
-{
-    uint32_t            err_code;
-    pstorage_handle_t   k_scaler_flash_handle;
-    uint8_t             scaler_block_offset = APP_MAX_ADV_SLOTS + 1;
-    pstorage_block_identifier_get(&m_pstorage_base_handle, scaler_block_offset, &k_scaler_flash_handle);
-
-    m_flash_wait_flag_cleared = false;
-    err_code = pstorage_load( m_flash_scaler_buff,
-                              &k_scaler_flash_handle,
-                              FLASH_BLOCK_SIZE,
-                              0);
-    RETURN_IF_ERROR(err_code);
-
-    FLASH_OP_WAIT();
-
-    DEBUG_PRINTF(0, "Loaded K Scalers from NVM:", 0);
-    for (uint8_t i = 0; i < FLASH_BLOCK_SIZE; i++)
+    switch (access_type)
     {
-        DEBUG_PRINTF(0,"0x%02x, ", m_flash_scaler_buff[i]);
-    }
-    DEBUG_PRINTF(0,"\r\n",0);
-
-    memcpy(p_scalers_buff, m_flash_scaler_buff, FLASH_BLOCK_SIZE);
-
-    return NRF_SUCCESS;
-}
-
-uint32_t eddystone_key_flash_store(uint8_t slot_no, eddystone_flash_data_type_t type, uint8_t * p_data)
-{
-    uint32_t err_code;
-    pstorage_handle_t identity_key_flash_handle;
-    pstorage_block_identifier_get(&m_pstorage_base_handle, slot_no + 1, &identity_key_flash_handle);
-
-    switch (type)
-    {
-        case EDDYSTONE_FLASH_DATA_TYPE_LK:
-            DEBUG_PRINTF(0, "Storing Lock Code to NVM\r\n",0);
-            m_flash_wait_flag_cleared = false;
-
-            err_code = pstorage_update(&m_pstorage_base_handle,
-                                      p_data,
-                                      ECS_AES_KEY_SIZE,
-                                      0);
+        case EDDYSTONE_FLASH_ACCESS_READ:
+            err_code = pstorage_load(p_lock_key,
+                                     &lock_key_handle,
+                                     FLASH_BLOCK_SIZE,
+                                     0);
             RETURN_IF_ERROR(err_code);
             break;
-        case EDDYSTONE_FLASH_DATA_TYPE_IK:
-            DEBUG_PRINTF(0, "Storing Identity Key to NVM\r\n",0);
-            m_flash_wait_flag_cleared = false;
+        case EDDYSTONE_FLASH_ACCESS_WRITE:
+            memcpy(m_flash_buffers[blk_index].buffer, p_lock_key, FLASH_BLOCK_SIZE);
+            err_code = pstorage_update(&lock_key_handle,
+                                       m_flash_buffers[blk_index].buffer,
+                                       FLASH_BLOCK_SIZE,
+                                       0);
+            RETURN_IF_ERROR(err_code);
+            break;
+        case EDDYSTONE_FLASH_ACCESS_CLEAR:
+            err_code = pstorage_clear(&lock_key_handle,
+                                      FLASH_BLOCK_SIZE);
+            RETURN_IF_ERROR(err_code);
+            break;
+        default:
 
-            err_code = pstorage_update(&identity_key_flash_handle,
-                                      p_data,
-                                      ECS_AES_KEY_SIZE,
-                                      0);
+            break;
+    }
+    return NRF_SUCCESS;
+}
+
+ret_code_t eddystone_flash_access_ecdh_key_pair(uint8_t * p_priv_key,
+                                                uint8_t * p_pub_key,
+                                                eddystone_flash_access_t access_type)
+{
+    ret_code_t err_code;
+    pstorage_handle_t priv_ecdh_handle;
+    pstorage_handle_t pub_ecdh_handle;
+
+    const uint8_t blk_index_priv = APP_MAX_ADV_SLOTS;
+    const uint8_t blk_index_pub = APP_MAX_ADV_SLOTS + 1;
+    //Private key block is immediately after the last slot config, and public key is immediately after the privtae key
+
+    pstorage_block_identifier_get(&m_pstorage_base_handle, blk_index_priv , &priv_ecdh_handle);
+    pstorage_block_identifier_get(&m_pstorage_base_handle, blk_index_pub , &pub_ecdh_handle);
+
+    switch (access_type)
+    {
+        case EDDYSTONE_FLASH_ACCESS_READ:
+            err_code = pstorage_load(p_priv_key,
+                                     &priv_ecdh_handle,
+                                     FLASH_BLOCK_SIZE,
+                                     0);
+            RETURN_IF_ERROR(err_code);
+            err_code = pstorage_load(p_pub_key,
+                                     &pub_ecdh_handle,
+                                     FLASH_BLOCK_SIZE,
+                                     0);
+            RETURN_IF_ERROR(err_code);
+            break;
+        case EDDYSTONE_FLASH_ACCESS_WRITE:
+            memcpy(m_flash_buffers[blk_index_priv].buffer, p_priv_key, FLASH_BLOCK_SIZE);
+            memcpy(m_flash_buffers[blk_index_pub].buffer, p_pub_key, FLASH_BLOCK_SIZE);
+
+            err_code = pstorage_update(&priv_ecdh_handle,
+                                       m_flash_buffers[blk_index_priv].buffer,
+                                       FLASH_BLOCK_SIZE,
+                                       0);
+            RETURN_IF_ERROR(err_code);
+            err_code = pstorage_update(&pub_ecdh_handle,
+                                       m_flash_buffers[blk_index_pub].buffer,
+                                       FLASH_BLOCK_SIZE,
+                                       0);
+            RETURN_IF_ERROR(err_code);
+            break;
+        case EDDYSTONE_FLASH_ACCESS_CLEAR:
+            err_code = pstorage_clear(&priv_ecdh_handle,
+                                      FLASH_BLOCK_SIZE);
+            RETURN_IF_ERROR(err_code);
+            err_code = pstorage_clear(&pub_ecdh_handle,
+                                      FLASH_BLOCK_SIZE);
+            RETURN_IF_ERROR(err_code);
+            break;
+        default:
+
+            break;
+    }
+    return NRF_SUCCESS;
+}
+
+ret_code_t eddystone_flash_access_slot_configs(uint8_t slot_no,
+                                               eddystone_flash_slot_config_t * p_config,
+                                               eddystone_flash_access_t access_type)
+{
+    ret_code_t err_code;
+    pstorage_handle_t slot_pstorage_handle;
+    pstorage_block_identifier_get(&m_pstorage_base_handle, slot_no, &slot_pstorage_handle);
+
+    switch (access_type)
+    {
+        case EDDYSTONE_FLASH_ACCESS_READ:
+            err_code = pstorage_load((uint8_t*)p_config,
+                                     &slot_pstorage_handle,
+                                     FLASH_BLOCK_SIZE,
+                                     0);
+            RETURN_IF_ERROR(err_code);
+            break;
+        case EDDYSTONE_FLASH_ACCESS_WRITE:
+            memcpy(m_flash_buffers[slot_no].buffer, p_config, FLASH_BLOCK_SIZE);
+            err_code = pstorage_update(&slot_pstorage_handle,
+                                       m_flash_buffers[slot_no].buffer,
+                                       FLASH_BLOCK_SIZE,
+                                       0);
+            RETURN_IF_ERROR(err_code);
+            break;
+        case EDDYSTONE_FLASH_ACCESS_CLEAR:
+            err_code = pstorage_clear(&slot_pstorage_handle,
+                                      FLASH_BLOCK_SIZE);
             RETURN_IF_ERROR(err_code);
             break;
         default:
             break;
     }
     return NRF_SUCCESS;
-
 }
 
-uint32_t eddystone_key_flash_load(uint8_t slot_no, eddystone_flash_data_type_t type, uint8_t * p_data)
+ret_code_t eddystone_flash_access_flags(eddystone_flash_flags_t * p_flags, eddystone_flash_access_t access_type)
 {
-    uint32_t                err_code;
-    pstorage_handle_t identity_key_flash_handle;
-    pstorage_block_identifier_get(&m_pstorage_base_handle, slot_no + 1, &identity_key_flash_handle);
+    ret_code_t err_code;
+    pstorage_handle_t flags_handle;
+    const uint8_t blk_index = APP_MAX_ADV_SLOTS+3;
+    pstorage_block_identifier_get(&m_pstorage_base_handle, blk_index, &flags_handle);
 
-    m_flash_wait_flag_cleared = false;
-
-    switch (type) {
-        case EDDYSTONE_FLASH_DATA_TYPE_LK:
-            err_code = pstorage_load(p_data,
-                                 &m_pstorage_base_handle,
-                                 ECS_AES_KEY_SIZE,
-                                 0);
+    switch (access_type)
+    {
+        case EDDYSTONE_FLASH_ACCESS_READ:
+            err_code = pstorage_load((uint8_t*)p_flags,
+                                     &flags_handle,
+                                     FLASH_BLOCK_SIZE,
+                                     0);
             RETURN_IF_ERROR(err_code);
             break;
-        case EDDYSTONE_FLASH_DATA_TYPE_IK:
-            err_code = pstorage_load(p_data,
-                                 &identity_key_flash_handle,
-                                 ECS_AES_KEY_SIZE,
-                                 0);
+        case EDDYSTONE_FLASH_ACCESS_WRITE:
+            memcpy(m_flash_buffers[blk_index].buffer, p_flags, FLASH_BLOCK_SIZE);
+            err_code = pstorage_update(&flags_handle,
+                                       m_flash_buffers[blk_index].buffer,
+                                       FLASH_BLOCK_SIZE,
+                                       0);
             RETURN_IF_ERROR(err_code);
+            break;
+        case EDDYSTONE_FLASH_ACCESS_CLEAR:
+            err_code = pstorage_clear(&flags_handle,
+                                      FLASH_BLOCK_SIZE);
+            RETURN_IF_ERROR(err_code);
+            break;
+        default:
+
             break;
     }
-
     return NRF_SUCCESS;
 }
 
-uint32_t eddystone_key_flash_clear(uint8_t slot_no)
+uint32_t eddystone_flash_num_pending_ops(void)
 {
-    uint32_t                err_code;
-    pstorage_handle_t identity_key_flash_handle;
-    pstorage_block_identifier_get(&m_pstorage_base_handle, slot_no + 1, &identity_key_flash_handle);
-
-    m_flash_wait_flag_cleared = false;
-
-    err_code = pstorage_clear(&identity_key_flash_handle, ECS_AES_KEY_SIZE);
-    RETURN_IF_ERROR(err_code);
-
-    return NRF_SUCCESS;
+    ret_code_t err_code;
+    uint32_t num_pending;
+    err_code = pstorage_access_status_get(&num_pending);
+    APP_ERROR_CHECK(err_code);
+    return num_pending;
 }
 
-bool eddystone_flash_is_busy(void)
+bool eddystone_flash_read_is_empty(uint8_t * p_input_array, uint8_t length)
 {
-    return !m_flash_wait_flag_cleared;
+    uint8_t empty_check[FLASH_BLOCK_SIZE] = {0};
+    memset(empty_check, 0xFF, sizeof(empty_check));
+    if (memcmp(empty_check, p_input_array, length) == 0)
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
 }
 
-uint32_t eddystone_flash_init(uint8_t * p_lock_key)
+ret_code_t eddystone_flash_init(pstorage_ntf_cb_t ps_cb)
 {
-    uint32_t                err_code;
+    ret_code_t                err_code;
     pstorage_module_param_t pstorage_params;
-    eddystone_flash_data_type_t lock_code_type = EDDYSTONE_FLASH_DATA_TYPE_LK;
-    uint8_t flash_empty[ECS_AES_KEY_SIZE] = {0x00};
-    uint8_t key_in_flash[ECS_AES_KEY_SIZE] = {0x00};
-
-    memset(flash_empty, 0xFF, ECS_AES_KEY_SIZE);
 
     pstorage_init();
 
-    pstorage_params.cb          = eddystone_pstorage_handler;
+    pstorage_params.cb          = ps_cb;
     pstorage_params.block_size  = FLASH_BLOCK_SIZE;
-    pstorage_params.block_count = APP_MAX_ADV_SLOTS + 2; //one block for each slot's IK, 1 for global LK, 1 for all the scaling factors
-
-    /**For convenience of flash access (block size must be multiples of 4 bytes) and
-       high frequency of key storage, having a FLASH_BLOCK_SIZE of ECS_AES_KEY_SIZE (16 bytes)
-       also means that there can only be 16 K scalers stored in one block. Thus under the current flash
-       implementation, the absolute maximum number of EID slots supported is 16. Albeit
-       it is highly unlikely there will ever be a need for anywhere close to 16 EID slots in one beacon
-    */
+    pstorage_params.block_count = NUM_OF_BLOCKS;
+    //One block for each slot's config, 2 for ECDH pair, 1 for lock key, 1 for Factory state flag
 
     /* Flash Block Layout:
-    [ LOCK KEY ] [ IK Slot 0] ....... [ IK slot (APP_MAX_ADV_SLOTS - 1)] [ Scalers slot 0 ... (APP_MAX_ADV_SLOTS - 1)]
+    [ Slot 0 config ].... [ Slot (APP_MAX_ADV_SLOTS - 1) config] [ Private ECDH ] [ Public ECDH ] [Lock Key] [Flags]
     */
-
     err_code = pstorage_register(&pstorage_params, &m_pstorage_base_handle);
     RETURN_IF_ERROR(err_code);
 
     #ifdef ERASE_FLASH_ON_REBOOT
-    DEBUG_PRINTF(0, "Clearing ALL registered NVM\r\n",0);
-    m_flash_wait_flag_cleared = false;
+    DEBUG_PRINTF(0, "Clearing all configurations stored in \r\n",0);
     err_code = pstorage_clear(&m_pstorage_base_handle, pstorage_params.block_size*pstorage_params.block_count);
     APP_ERROR_CHECK(err_code);
-    FLASH_OP_WAIT();
+
+    uint32_t ops_pending = eddystone_flash_num_pending_ops();
+    while (ops_pending != 0)
+    {
+      ops_pending = eddystone_flash_num_pending_ops();
+    }
     #endif
-
-    //Read the lock key
-    err_code = eddystone_key_flash_load(0xFF, lock_code_type, key_in_flash);
-    RETURN_IF_ERROR(err_code);
-
-    FLASH_OP_WAIT();
-
-    DEBUG_PRINTF(0,"Lock Key Read From Flash:",0);
-    for (uint8_t i = 0; i < 16; i++)
-    {
-        DEBUG_PRINTF(0,"0x%02x, ", key_in_flash[i]);
-    }
-    DEBUG_PRINTF(0,"\r\n",0);
-
-    //If flash is empty, write new key to it, otherwise return the key from flash
-    if(memcmp(flash_empty,key_in_flash,ECS_AES_KEY_SIZE) == 0)
-    {
-        eddystone_key_flash_store(0, lock_code_type, p_lock_key);
-        FLASH_OP_WAIT();
-    }
-    else
-    {
-        memcpy(p_lock_key, key_in_flash, ECS_AES_KEY_SIZE);
-    }
 
     return NRF_SUCCESS;
 }
