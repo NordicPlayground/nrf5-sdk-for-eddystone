@@ -12,11 +12,15 @@ cd ../../..
 git clone "https://github.com/ctz/cifra.git" "crypto_libs/temp/cifra"
 cd crypto_libs/temp/cifra
 git checkout a4c29ed77990c8427e7cb8aabf3162e99c1e5daa
+# Create a separate branch off of detached head
+git checkout -b nrf5-sdk-for-eddystone
 #Cifra EAX library fix
 git cherry-pick 82d77cd8323f6d4473fcb68517752a778970138d
 #ifndef blocks fix
 git cherry-pick e4987b20d446d3dd102dbaa1df448159ed94afd6
 cd ../../..
+
+
 
 git clone "https://weave.googlesource.com/weave/libuweave" "crypto_libs/temp/tiny-aes128"
 cd crypto_libs/temp/tiny-aes128
