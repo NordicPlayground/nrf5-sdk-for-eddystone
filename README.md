@@ -23,7 +23,7 @@ This is an example implementation of the Eddystone GATT Configuration Service fo
 
     * Added persistent slot configurations feature so that after power loss or intentional reset of the chip, all previously configured slots will be restored from flash memory. Note that in order for slots to be saved to flash memory, a BLE Disconnect event must occur before any accidental or intentional power loss.
     * EID clock values are now written to flash memory every 24 hours as recommended by Google's [spec](https://github.com/google/eddystone/blob/master/eddystone-eid/eid-computation.md) for recovering from power loss regarding EID computation.
-    * Merged in via script the cifra crypto library's fix for a [known issue](https://github.com/ctz/cifra/issues/3) with EAX encryption of the eTLM frames. Now eTLM frames are properly encrypted. Make sure to run `crypto_setup_all.sh` so the correct commits are checked out. 
+    * Merged in via script the cifra crypto library's fix for a [known issue](https://github.com/ctz/cifra/issues/3) with EAX encryption of the eTLM frames. Now eTLM frames are properly encrypted. Make sure to run `crypto_setup_all.sh` so the correct commits are checked out.
     * Added a stand-alone application hex file without the softdevice merged in so it can be DFUed with a bootloader.
     * Other small stability improvements, bug fixes, and house cleaning.
 
@@ -185,7 +185,21 @@ Please note that after pressing Button 1, the DK will only broadcast in "Connect
 Detailed instructions on how to use the App is available in the [nRF Beacon for Eddystone GitHub repository](https://github.com/NordicSemiconductor/Android-nRF-Beacon-for-Eddystone).
 
 ## How it works
-Instructions on the firmware structure and on how to modify the firmware are coming soon.
+### Modules
+The firmware is mainly broken up in several modules that each handle specific functionalities required by the Eddystone specification.
+* **eddystone_ble_handler**
+    * Here is where the BLE functionalities are initialized along with all the other modules in the firmware. It's essentially the practical main file of the project.
+    * In `services_and_modules_init` you can see how the broadcast capabilities are set via the `ble_ecs_init_params_t` struct and can change the defined macros (prefixed with `APP_`) accordingly in `eddystone_app_config.h` to reflect your needs.
+    * The module is also responsible for handling all BLE events coming from the softdevice and dispatching them to the other modules that need them.
+    * Most importantly this module controls all the R/W authorizations of the Eddystone Configuration GATT Service. Any characteristic R/W events coming from the Central is handled here in `ecs_read_evt_handler()` and `ecs_write_evt_handler()` so the correct per slot information and security information can be accessed in the `eddystone_adv_slot` and `eddystone_security` modules before R/W of the characteristic values.
+
+* **eddystone_adv_slot**
+    * This module is the data core of the firmware which contains all the data (non-security related) in the slots with which the BLE Central interact.
+
+    Essentially this module contains an array of `eddystone_adv_slot_t` structures, with each structure representing a slot: parameters such as the advertising interval and radio tx power are written to and retrieved from here, and it's also responsible for generating and keeping the data of the actual frames to be broadcast (retrieved and advertised by the `eddystone_advertising_manager`) or to be read from R/W ADV Slot characteristic.
+
+* **eddystone_security**
+    * The security module does exactly what it sounds like it does, security. All the encryption/decryption processes such as validating the unlock key, generating and exchanging ECDH keys, eTLM encryption etc. are handled here here and it acts as an abstraction layer to the 3rd party crypto libraries that we use. Similar to `eddystone_adv_slot`, the security module contains an array of `eddystone_security_slot_t` structures that contain all the necessary data to maintain an EID.
 
 ## Issues and support
 This example application is provided as a firmware foundation for beacon providers or for users simply wanting to experiment with Eddystone. It is not part of the official nRF5 SDK and support is therefore limited. Expect limited follow-up of issues.

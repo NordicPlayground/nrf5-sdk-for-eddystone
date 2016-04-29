@@ -25,12 +25,11 @@
 #define PERIPHERAL_LINK_COUNT                           1                                 /**<number of peripheral links used by the application. When changing this number remember to adjust the RAM settings*/
 
 #define APP_CFG_NON_CONN_ADV_TIMEOUT                    0                               /**< Time for which the device must be advertising in non-connectable mode (in seconds). 0 disables the time-out. */
-#define DEFAULT_NON_CONNECTABLE_ADV_INTERVAL_MS         1000                            /**< The advertising interval for non-connectable advertisement (1000 ms). This value can vary between 100 ms and 10.24 s). */
+#define APP_CFG_NON_CONN_ADV_INTERVAL_MS                1000                            /**< The default advertising interval for non-connectable advertisement (1000 ms). This value can vary between 100 ms and 10.24 s). */
 #define APP_CFG_CONNECTABLE_ADV_TIMEOUT                 60                              /**< Time for which the device must be advertising in connectable mode (in seconds). 0 disables the time-out. */
-#define DEFAULT_CONNECTABLE_ADV_INTERVAL_MS             100                             /**< The advertising interval for connectable advertisement (1000 ms). This value can vary between 20 ms and 10.24 s). */
+#define APP_CFG_CONNECTABLE_ADV_INTERVAL_MS             100                             /**< The advertising interval for connectable advertisement (1000 ms). This value can vary between 20 ms and 10.24 s). */
 
-#define DEFAULT_NON_CONNECTABLE_TX_POWER                0
-#define DEFAULT_CONNECTABLE_TX_POWER                    0
+#define APP_CFG_DEFAULT_RADIO_TX_POWER                  0x00                             /**< Default TX power of the radio */
 
 #define MIN_CONN_INTERVAL                               MSEC_TO_UNITS(50, UNIT_1_25_MS)             /**< Minimum acceptable connection interval (20 ms), Connection interval uses 1.25 ms units. */
 #define MAX_CONN_INTERVAL                               MSEC_TO_UNITS(90, UNIT_1_25_MS)             /**< Maximum acceptable connection interval (75 ms), Connection interval uses 1.25 ms units. */
@@ -43,10 +42,16 @@
 
 //EDDYSTONE CONFIGS
 #define APP_MAX_ADV_SLOTS                               5
-#define APP_MAX_EID_SLOTS                               APP_MAX_ADV_SLOTS  //DO NOT CHANGE THIS
+#define APP_MAX_EID_SLOTS                               APP_MAX_ADV_SLOTS  //!MAX EID SLOT SHOULD NOT BE DIFFERENT THAN MAX EID SLOT AT THE MOMENT
 
 #define APP_IS_VARIABLE_ADV_SUPPORTED                   ECS_BRDCST_VAR_ADV_SUPPORTED_No
 #define APP_IS_VARIABLE_TX_POWER_SUPPORTED              ECS_BRDCST_VAR_TX_POWER_SUPPORTED_Yes
+
+#define APP_IS_UID_SUPPORTED                            ECS_FRAME_TYPE_UID_SUPPORTED_Yes
+#define APP_IS_URL_SUPPORTED                            ECS_FRAME_TYPE_URL_SUPPORTED_Yes
+#define APP_IS_TLM_SUPPORTED                            ECS_FRAME_TYPE_TLM_SUPPORTED_Yes
+#define APP_IS_EID_SUPPORTED                            ECS_FRAME_TYPE_EID_SUPPORTED_Yes
+
 
 // Eddystone common data
 #define APP_EDDYSTONE_UUID              0xFEAA                            /**< UUID for Eddystone beacons according to specification. */
@@ -68,9 +73,9 @@
                                         0x69, 0x63, 0x73, 0x65, \
                                         0x6d,0x69, 0x00                   /**< "nordicsemi.com". Last byte suffix 0x00 = ".com" according to specification. */
 
-#define DEFAULT_FRAME_TYPE                      APP_EDDYSTONE_URL_FRAME_TYPE
-#define DEFAULT_FRAME_DATA                      {APP_EDDYSTONE_URL_SCHEME, APP_EDDYSTONE_URL_URL} /**Should mimic the data that would be written to
-                                                                                                                                  the RW ADV slot characteristic (e.g. no RSSI/DFU for UID) */
+#define DEFAULT_FRAME_TYPE              APP_EDDYSTONE_URL_FRAME_TYPE
+#define DEFAULT_FRAME_DATA              {APP_EDDYSTONE_URL_SCHEME, APP_EDDYSTONE_URL_URL} /**Should mimic the data that would be written to
+                                                                                             the RW ADV slot characteristic (e.g. no RSSI/DFU for UID) */
 
 
 

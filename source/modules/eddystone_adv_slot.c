@@ -35,6 +35,7 @@ void eddystone_adv_slots_init( ble_ecs_init_t * p_ble_ecs_init )
     eddystone_flash_flags_t flash_flags;
     memset(&flash_flags, 0, sizeof(eddystone_flash_flags_t));
 
+    //Read the flash flags to see if there are any previously stored slot configs
     err_code = eddystone_flash_access_flags(&flash_flags, EDDYSTONE_FLASH_ACCESS_READ);
     APP_ERROR_CHECK(err_code);
 
@@ -45,6 +46,7 @@ void eddystone_adv_slots_init( ble_ecs_init_t * p_ble_ecs_init )
     }
     DEBUG_PRINTF(0, "Flash Flags: \r\n",0);
     PRINT_ARRAY((uint8_t *)&flash_flags, sizeof(eddystone_flash_flags_t));
+    //No previous configs, set default configs
     if (flash_flags.factory_state)
     {
         if(flash_flags.factory_state != 1 && flash_flags.factory_state != 0xFF)
@@ -88,6 +90,7 @@ void eddystone_adv_slots_init( ble_ecs_init_t * p_ble_ecs_init )
             }
         }
     }
+    //Stored configs are available, use these instead
     else
     {
         for (uint8_t i = 0; i < APP_MAX_ADV_SLOTS; i++)
@@ -435,7 +438,7 @@ void eddystone_adv_slot_encrypted_eid_id_key_set( uint8_t slot_no, ble_ecs_eid_i
     }
 }
 
-void eddystone_adv_slot_eid_set( uint8_t slot_no )
+void eddystone_adv_slot_eid_ready( uint8_t slot_no )
 {
     m_slots[slot_no].frame_write_buffer[0] = EDDYSTONE_FRAME_TYPE_EID;
     m_slots[slot_no].adv_frame.eid.frame_type = EDDYSTONE_FRAME_TYPE_EID;
@@ -571,7 +574,7 @@ static uint32_t eddystone_adv_slot_adv_frame_set(uint8_t slot_no)
                 RETURN_IF_ERROR(err_code);
 
                 //note: the adv frame is completely set when the security module calls back to the ble_handler
-                //when EIDs have been generated, eddystone_adv_slot_eid_set is called
+                //when EIDs have been generated, eddystone_adv_slot_eid_ready is called
                 //and the EID is fetched from the security module and placed into the adv_frame
             }
             else if (m_slots[slot_no].frame_write_length == ECS_EID_WRITE_IDK_LENGTH) // 18 bytes
@@ -587,7 +590,7 @@ static uint32_t eddystone_adv_slot_adv_frame_set(uint8_t slot_no)
                 RETURN_IF_ERROR(err_code);
 
                 //note: the adv frame is completely set when the security module calls back to the ble_handler
-                //when EIDs have been generated, eddystone_adv_slot_eid_set is called
+                //when EIDs have been generated, eddystone_adv_slot_eid_ready is called
                 //and the EID is fetched from the security module and placed into the adv_frame
             }
             else

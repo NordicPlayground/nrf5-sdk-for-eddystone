@@ -46,7 +46,7 @@ typedef struct
     ble_ecs_radio_tx_pwr_t      radio_tx_pwr;
     eddystone_frame_type_t      frame_type;
     eddystone_adv_frame_t       * p_adv_frame;
-    uint8_t                     url_frame_length;
+    uint8_t                     url_frame_length;     //Since the url length is variable, it must be provided as a parameter
 } eddystone_adv_slot_params_t;
 
 /**@brief Function to initialize the eddystone advertising slots with default values
@@ -133,26 +133,25 @@ void eddystone_adv_slot_rw_adv_data_set( uint8_t slot_no, ble_ecs_rw_adv_slot_t 
  */
 void eddystone_adv_slot_rw_adv_data_get( uint8_t slot_no, ble_ecs_rw_adv_slot_t * p_frame_data );
 
-/**@brief Function for writing the slot configuration to flash
-*/
+/**@brief Function for writing the slot's configuration to flash*/
 void eddystone_adv_slot_write_to_flash( uint8_t slot_no );
 
-/**@brief Function for setting the slot's encrypted EID Identity Key
+/**@brief Function for setting the slot's encrypted EID Identity Key to be displayed in the EID Identity Key characteristic
 *
 * @param[in]       slot_no         the slot index
 * @param[in,out]   p_eid_id_key    pointer to a ble_ecs_eid_id_key_t where the key will be written from
 */
 void eddystone_adv_slot_encrypted_eid_id_key_set( uint8_t slot_no, ble_ecs_eid_id_key_t * p_eid_id_key );
 
-/**@brief Function for getting the slot's encrypted EID Identity Key
+/**@brief Function for getting the slot's encrypted EID Identity Key to be displayed in the EID Identity Key characteristic
 *
 * @param[in]       slot_no         the slot index
 * @param[in,out]   p_eid_id_key    pointer to a ble_ecs_eid_id_key_t where the key will be retrieved to
 */
 ret_code_t eddystone_adv_slot_encrypted_eid_id_key_get( uint8_t slot_no, ble_ecs_eid_id_key_t * p_eid_id_key );
 
-/**@brief Function for populating the advertising frame with the EID*/
-void eddystone_adv_slot_eid_set( uint8_t slot_no );
+/**@brief Function to call when an EID has been generated so the adv frame can be populated with the EID*/
+void eddystone_adv_slot_eid_ready( uint8_t slot_no );
 
 /**@brief Function for getting the id and total number of slots that are EIDs
 *
