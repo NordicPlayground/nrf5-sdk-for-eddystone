@@ -257,18 +257,7 @@ static void eddystone_security_lock_code_init(uint8_t * p_lock_buff)
 
         #ifdef UNIQUE_LOCK_CODE
         uint32_t device_id[2] = {NRF_FICR->DEVICEID[0],NRF_FICR->DEVICEID[1]};
-        uint8_t  random_num[8] = {0x00};
-        uint8_t  bytes_available;
-
-        sd_rand_application_bytes_available_get(&bytes_available);
-        while (bytes_available < ECS_AES_KEY_SIZE/2)
-        {
-           //wait for SD to acquire enough RNs
-           sd_rand_application_bytes_available_get(&bytes_available);
-        }
-
-        sd_rand_application_vector_get(random_num, ECS_AES_KEY_SIZE/2);
-
+        uint8_t  random_num[8] = {0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08};
         #endif
 
         #ifdef STATIC_LOCK_CODE

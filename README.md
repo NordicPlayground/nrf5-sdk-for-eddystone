@@ -196,10 +196,11 @@ The firmware is mainly broken up in several modules that each handle specific fu
 * **eddystone_adv_slot**
     * This module is the data core of the firmware which contains all the data (non-security related) in the slots with which the BLE Central interact.
 
-    Essentially this module contains an array of `eddystone_adv_slot_t` structures, with each structure representing a slot: parameters such as the advertising interval and radio tx power are written to and retrieved from here, and it's also responsible for generating and keeping the data of the actual frames to be broadcast (retrieved and advertised by the `eddystone_advertising_manager`) or to be read from R/W ADV Slot characteristic.
+    Essentially this module contains an array of `eddystone_adv_slot_t` structures, with each structure representing a slot: parameters such as the advertising interval and radio tx power are written to and retrieved from here, and it's also responsible for generating and keeping the data of the actual frames to be broadcast (which are retrieved and advertised by the `eddystone_advertising_manager`) or to be read from R/W ADV Slot characteristic.
 
 * **eddystone_security**
     * The security module does exactly what it sounds like it does, security. All the encryption/decryption processes such as validating the unlock key, generating and exchanging ECDH keys, eTLM encryption etc. are handled here here and it acts as an abstraction layer to the 3rd party crypto libraries that we use. Similar to `eddystone_adv_slot`, the security module contains an array of `eddystone_security_slot_t` structures that contain all the necessary data to maintain an EID.
+    * One notable function that might be of interest for developers in the `eddystone_security_lock_code_init()` since it determines how the lock code it generated. 
 
 ## Issues and support
 This example application is provided as a firmware foundation for beacon providers or for users simply wanting to experiment with Eddystone. It is not part of the official nRF5 SDK and support is therefore limited. Expect limited follow-up of issues.
