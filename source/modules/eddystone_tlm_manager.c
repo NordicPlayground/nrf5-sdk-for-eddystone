@@ -124,7 +124,6 @@ ret_code_t eddystone_tlm_manager_init(void)
 static void eddystone_tlm_update_temp(void)
 {
     ret_code_t err_code;
-    const uint8_t  TLM_TEMP_INTERVAL = 30;
     static uint8_t temp_counter = TLM_TEMP_INTERVAL - 1;
 
     //No need to get the temperature every time a TLM is broadcast since temperature

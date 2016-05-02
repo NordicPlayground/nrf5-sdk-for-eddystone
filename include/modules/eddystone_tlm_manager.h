@@ -3,6 +3,8 @@
 
 #include "eddystone.h"
 
+#define TLM_TEMP_INTERVAL 30
+
 /**@brief Function for initializing the TLM manager
  * @retval see @ref app_timer_start
  */
