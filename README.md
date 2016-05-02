@@ -81,9 +81,10 @@ Characteristic | Name | Status
 ## Prerequisites
 
 #### Software
+* [SEGGER Embedded Studio IDE](https://www.segger.com/downloads/embeddedstudio) (Note: If you don't have a Keil license or you are developing on Mac OS X or Linux this is the best option).
 * [Keil uVision 5 IDE](https://www.keil.com/demo/eval/arm.htm) (Note: you must have a registered version of Keil in order to compile source code that generates more than 32kB of code and data, currently this project generates 39 kB even with -O3 optimization level)
 * [Git Bash](https://git-scm.com/downloads)
-* [nRFgo Studio](https://www.nordicsemi.com/eng/nordic/Products/nRFgo-Studio/nRFgo-Studio-Win64/14964)
+* [nRFgo Studio](https://www.nordicsemi.com/eng/nordic/Products/nRFgo-Studio/nRFgo-Studio-Win64/14964) (Note: Not required if using SEGGER Embedded Studio).
 
 The application might work with other versions of the SDK/Keil but some modification of the source code is likely required on your part.
 
@@ -92,8 +93,7 @@ The application might work with other versions of the SDK/Keil but some modifica
 * Android phone 4.3+
 
 ## Known issues
-* Only Keil is supported for now. GCC and IAR are scheduled for a future release.
-* Only Windows development environment is supported for now. Linux and OSX are scheduled for a later release. You may still flash the firmware using the [Quick start](#quick-start) guide.
+* Keil and SEGGER Embedded Studio (GCC) are currently supported. IAR and Makefile based GCC project is scheduled for a future release.
 * After an Eddystone-EID slot is configured it will be preserved after power cycling. However, if you try to read the ECDH key again from the characteristic it will not be available. Slots containing other frame types are not preserved after power cycling.
 * When compiling there are warnings from the third-party crypto libraries.
 
@@ -151,17 +151,22 @@ Some_parent_folder
                                 README.md
 ```
 
-*  Open the .uvprojx project file in Keil, which is found here:
+*  Open the .emProject project file in SEGGER Embedded Studio, which is found here:
+```
+nrf5-sdk-for-eddystone\project\pca10040_s132\embedded_studio
+```
+
+*  Or open the .uvprojx project file in Keil, which is found here:
 ```
 nrf5-sdk-for-eddystone\project\pca10040_s132\arm5_no_packs
 ```
-*  The project is expected to compile with 2 warnings coming from one of the crypto libraries. You might also need to download NordicSemiconductor::nRF_DeviceFamilyPack 8.3.1 in Keil's Pack Installer if you don't already have it before the project can compile
+*  The project is expected to compile with 2 warnings coming from one of the crypto libraries when using Keil. You might also need to download NordicSemiconductor::nRF_DeviceFamilyPack 8.5.0 in Keil's Pack Installer if you don't already have it before the project can compile
 
-*  Before loading the firmware onto your nRF52 DK or starting a debug session in Keil, you must flash in the S132 Softdevice that can be found here:
+*  (Note: not required if using Embedded Studio) Before loading the firmware onto your nRF52 DK or starting a debug session in Keil, you must flash in the S132 Softdevice that can be found here:
 ```
 sdk_components\softdevice\s132\hex\s132_nrf52_2.0.0_softdevice.hex
 ```
-The Softdevice can be flashed in with Nordic's [nRFgo Studio](https://www.nordicsemi.com/eng/nordic/Products/nRFgo-Studio/nRFgo-Studio-Win64/14964) tool. For instructions on how to use nRFgo Studio, follow the tutorial here under the [Preparing the Development Kit](https://devzone.nordicsemi.com/tutorials/2/) section.
+(Note: Not required if using Embedded Studio) The Softdevice can be flashed in with Nordic's [nRFgo Studio](https://www.nordicsemi.com/eng/nordic/Products/nRFgo-Studio/nRFgo-Studio-Win64/14964) tool. For instructions on how to use nRFgo Studio, follow the tutorial here under the [Preparing the Development Kit](https://devzone.nordicsemi.com/tutorials/2/) section.
 
 ## How to use
 After flashing the firmware to a nRF52 DK it will automatically start broadcasting a Eddystone-URL pointing to http://www.nordicsemi.com, with LED 1 blinking. In order to configure the beacon to broadcast a different URL or a different frame type it is necessary to put the DK in configuration mode by pressing Button 1 on the DK so it starts advertising in "Connectable Mode". After that, it can be connected to nRF Beacon for Eddystone app, which allows the writing of the Lock Key to the Unlock Characteristic.
