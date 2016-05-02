@@ -52,6 +52,12 @@
 #define  RTC1_TICKS_MAX          16777216
 #define  TK_ROLLOVER             0x10000
 
+#define NONCE_SIZE    (6)
+#define TAG_SIZE      (2)
+#define SALT_SIZE     (2)
+#define TLM_DATA_SIZE (EDDYSTONE_TLM_LENGTH - 2)
+#define EIK_SIZE      (ECS_AES_KEY_SIZE)
+
 static eddystone_security_init_t m_security_init;
 
 static nrf_ecb_hal_data_t m_aes_ecb_lk;    //AES encryption struct of global lock key

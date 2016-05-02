@@ -4,12 +4,6 @@
 #include "ble_ecs.h"
 #include "app_error.h"
 
-#define NONCE_SIZE    (6)
-#define TAG_SIZE      (2)
-#define SALT_SIZE     (2)
-#define TLM_DATA_SIZE (EDDYSTONE_TLM_LENGTH - 2)
-#define EIK_SIZE      (ECS_AES_KEY_SIZE)
-
 typedef enum
 {
     EDDYSTONE_SECURITY_MSG_UNLOCKED,        /**< Beacon is Unlocked*/
