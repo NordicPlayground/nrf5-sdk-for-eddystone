@@ -31,7 +31,7 @@
       linker_memory_map_file="$(PackagesDir)/nRF/XML/nRF52832_xxAA_MemoryMap.xml"
       linker_output_format="hex"
       linker_section_placement_file="$(StudioDir)/targets/Cortex_M/flash_placement.xml"
-      linker_section_placement_macros="FLASH_START = 0x1C000;SRAM_START = 0x20001FE8"
+      linker_section_placement_macros="FLASH_START=0x1C000  ;SRAM_START=0x20001FE8  "
       macros="DeviceHeaderFile=$(PackagesDir)/nRF/CMSIS/Device/Include/nrf.h;DeviceLibraryIdentifier=M4lf;DeviceSystemFile=$(PackagesDir)/nRF/CMSIS/Device/Source/system_nrf52.c;DeviceVectorsFile=$(PackagesDir)/nRF/Source/nrf52_Vectors.s;DeviceFamily=nRF"
       package_dependencies="nRF"
       project_directory=""
@@ -111,9 +111,19 @@
         <file file_name="../../../source/crypto_libs/rfc6234/sha224-256.c" />
         <file file_name="../../../source/crypto_libs/rfc6234/sha384-512.c" />
         <file file_name="../../../source/crypto_libs/rfc6234/usha.c" />
+        <configuration
+          Name="Common"
+          build_object_file_name="$(IntDir)/rfc6234-$(InputName)$(OBJ)" />
       </folder>
       <folder Name="tiny-aes128-c">
-        <file file_name="../../../source/crypto_libs/tiny-aes128-c/aes.c" />
+        <file file_name="../../../source/crypto_libs/tiny-aes128-c/aes.c">
+          <configuration
+            Name="Common"
+            build_object_file_name="$(IntDir)/tiny-aes128-c-$(InputName)$(OBJ)" />
+        </file>
+        <configuration
+          Name="Common"
+          build_object_file_name="$(IntDir)/tiny-aes128-c-$(InputName)$(OBJ)" />
       </folder>
       <folder Name="::CMSIS" />
       <folder Name="::Device" />
