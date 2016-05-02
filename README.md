@@ -94,6 +94,7 @@ The application might work with other versions of the SDK/Keil but some modifica
 
 ## Known issues
 * Keil and SEGGER Embedded Studio (GCC) are currently supported. IAR and Makefile based GCC project is scheduled for a future release.
+* When using SEGGER Embedded Studio two files in Nordic's SDK must be modified. These are 'retarget.c' and 'app_util_platform.h.' In 'retarget.c' lines 29&30 (FILE __stdout;) must be commented out. In 'app_util_platform.h' #define PACKED(TYPE) TYPE __attribute__((packed)) must be used instead of #define PACKED(TYPE) __packed TYPE. (These are bugs in the SDK and have been reported).
 * After an Eddystone-EID slot is configured it will be preserved after power cycling. However, if you try to read the ECDH key again from the characteristic it will not be available. Slots containing other frame types are not preserved after power cycling.
 * When compiling there are warnings from the third-party crypto libraries.
 
