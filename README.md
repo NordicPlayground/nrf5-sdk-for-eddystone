@@ -81,12 +81,12 @@ Characteristic | Name | Status
 ## Prerequisites
 
 #### Software
-* [SEGGER Embedded Studio IDE](https://www.segger.com/downloads/embeddedstudio) (Note: If you don't have a Keil license or you are developing on Mac OS X or Linux this is the best option).
+* [SEGGER Embedded Studio IDE](https://www.segger.com/downloads/embeddedstudio) with the [nRF](https://devzone.nordicsemi.com/attachment/315266173907f1c16d81f842f0796730) and CMSIS packs installed. (Note: If you don't have a Keil license or you are developing on Mac OS X or Linux this is the best option).
 * [Keil uVision 5 IDE](https://www.keil.com/demo/eval/arm.htm) (Note: you must have a registered version of Keil in order to compile source code that generates more than 32kB of code and data, currently this project generates 39 kB even with -O3 optimization level)
 * [Git Bash](https://git-scm.com/downloads)
 * [nRFgo Studio](https://www.nordicsemi.com/eng/nordic/Products/nRFgo-Studio/nRFgo-Studio-Win64/14964) (Note: Not required if using SEGGER Embedded Studio).
 
-The application might work with other versions of the SDK/Keil but some modification of the source code is likely required on your part.
+The application might work with other versions of the SDK/Keil but some modification of the source code is likely required on your part. For a quick start on using Embedded Studio with nRF5 devices see: https://devzone.nordicsemi.com/blogs/845/segger-embedded-studio-cross-platform-ide-w-no-cod/.
 
 #### Hardware
 * [nRF52 Development Kit](https://octopart.com/nrf52-dk-nordic+semiconductor-67145952)
