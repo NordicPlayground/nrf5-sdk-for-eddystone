@@ -116,7 +116,7 @@ typedef enum
     BLE_ECS_EVT_REMAIN_CNNTBL
 } ble_ecs_evt_type_t;
 
-/**@brief eddystone configuration service init params (corresponds to each char.) */
+/**@brief eddystone configuration service init params (corresponds to required char.) */
 typedef struct
 {
     ble_ecs_brdcst_cap_t        brdcst_cap;
@@ -125,9 +125,6 @@ typedef struct
     ble_ecs_radio_tx_pwr_t      radio_tx_pwr;
     ble_ecs_adv_tx_pwr_t        adv_tx_pwr;
     ble_ecs_lock_state_t        lock_state;
-    ble_ecs_unlock_t            unlock;
-    ble_ecs_public_ecdh_key_t   pub_ecdh_key;
-    ble_ecs_eid_id_key_t        eid_id_key;
     ble_ecs_rw_adv_slot_t       rw_adv_slot;
     ble_ecs_factory_reset_t     factory_reset;
     ble_ecs_remain_conntbl_t    remain_cnntbl;
@@ -168,7 +165,7 @@ struct ble_ecs_s
     ble_gatts_char_handles_t        active_slot_handles;          /**< Handles related to the active_slot characteristic (as provided by the S132 SoftDevice). */
     ble_gatts_char_handles_t        adv_intrvl_handles;           /**< Handles related to the adv_intrvl characteristic (as provided by the S132 SoftDevice). */
     ble_gatts_char_handles_t        radio_tx_pwr_handles;         /**< Handles related to the radio_tx_pwr characteristic (as provided by the S132 SoftDevice). */
-    ble_gatts_char_handles_t        adv_tx_pwr_handles;           //...
+    ble_gatts_char_handles_t        adv_tx_pwr_handles;           //...You get the point
     ble_gatts_char_handles_t        lock_state_handles;           //...
     ble_gatts_char_handles_t        unlock_handles;               //...
     ble_gatts_char_handles_t        pub_ecdh_key_handles;         //...

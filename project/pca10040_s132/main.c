@@ -12,12 +12,13 @@
 
 /** @file
  *
- * @defgroup experimental_ble_sdk_app_eddystone_main main.c
+ * @defgroup nrf5_sdk_for_eddystone main.c
  * @{
- * @ingroup experimental_ble_sdk_app_eddystone
- * @brief Eddystone Beacon UID Transmitter sample application main file.
+ * @ingroup nrf5_sdk_for_eddystone
+ * @brief Eddystone Beacon GATT Configuration Service + EID/eTLM sample application main file.
  *
- * This file contains the source code for an Eddystone beacon transmitter sample application.
+ * This file contains the source code for an Eddystone
+ * Beacon GATT Configuration Service + EID/eTLM sample application.
  */
 
 #include <stdbool.h>
@@ -32,7 +33,6 @@
 #include "app_scheduler.h"
 
 #define DEAD_BEEF                       0xDEADBEEF                        /**< Value used as error code on stack dump, can be used to identify stack location on stack unwind. */
-
 
 /**@brief Callback function for asserts in the SoftDevice.
  *
@@ -65,12 +65,12 @@ int main(void)
 {
     uint32_t err_code;
     // Initialize.
+
     APP_SCHED_INIT(SCHED_MAX_EVENT_DATA_SIZE, SCHED_QUEUE_SIZE);
     APP_TIMER_APPSH_INIT(APP_TIMER_PRESCALER, APP_TIMER_OP_QUEUE_SIZE, true);
     err_code = bsp_init(BSP_INIT_LED, APP_TIMER_TICKS(100, APP_TIMER_PRESCALER), NULL);
     APP_ERROR_CHECK(err_code);
     eddystone_ble_init();
-    LEDS_ON(LEDS_MASK);
 
     // Enter main loop.
     for (;; )

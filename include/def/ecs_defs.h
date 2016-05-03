@@ -3,13 +3,10 @@
 
 #include "eddystone.h"
 
+/*@file Contains definitions specific to the Eddystone Configuration Service */
+
 #define ECS_UID_READ_LENGTH                     (EDDYSTONE_UID_LENGTH)
 #define ECS_UID_WRITE_LENGTH                    (EDDYSTONE_UID_NAMESPACE_LENGTH + EDDYSTONE_UID_INSTANCE_LENGTH + EDDYSTONE_FRAME_TYPE_LENGTH)
-
-
-#define ECS_URL_READ_LENGTH                     (EDDYSTONE_URL_LENGTH)
-#define ECS_URL_WRITE_LENGTH                    (EDDYSTONE_URL_URL_SCHEME_LENGTH + EDDYSTONE_URL_ENCODED_URL_LENGTH + EDDYSTONE_FRAME_TYPE_LENGTH)
-
 
 #define ECS_TLM_READ_LENGTH                     (ECS_TLM_READ_LENGTH)
 #define ECS_TLM_WRITE_LENGTH                    (EDDYSTONE_FRAME_TYPE_LENGTH)
@@ -17,6 +14,8 @@
 #define ECS_EID_READ_LENGTH                     (14)
 #define ECS_EID_WRITE_ECDH_LENGTH               (34)
 #define ECS_EID_WRITE_IDK_LENGTH                (18)
+
+#define ECS_URL_WRITE_LENGTH                    (19)
 
 //Defined in nRF52 Specifications
 #define ECS_NUM_OF_SUPORTED_TX_POWER        (9)
@@ -40,7 +39,6 @@
 #define ECS_BRDCST_VAR_TX_POWER_SUPPORTED_No               (0)
 #define ECS_BRDCST_VAR_TX_POWER_SUPPORTED_Pos              (1)
 #define ECS_BRDCST_VAR_TX_POWER_SUPPORTED_Msk              (1 << ECS_BRDCST_VAR_TX_POWER_SUPPORTED_Pos)
-
 #define ECS_BRDCST_VAR_RFU_MASK                            (0x03)       /*AND Mask to guarantee that bits 0x04 to 0x80 (RFU) are cleared */
 
 /* Field: ble_ecs_init_params_t.brdcst_cap.supp_frame_types*/

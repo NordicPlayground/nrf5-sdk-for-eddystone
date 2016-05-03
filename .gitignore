@@ -11,3 +11,7 @@ crypto_libs
 ## Symlinks should not be commited ##
 sdk_components
 sdk_external
+
+
+##Script to generate merged hex file##
+copy_merge_hex.sh
