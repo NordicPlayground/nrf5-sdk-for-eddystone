@@ -383,7 +383,7 @@ static void ble_eddystone_security_cb(uint8_t slot_no,
             break;
         case EDDYSTONE_SECURITY_MSG_EID:
             //New EID was generated
-            eddystone_adv_slot_eid_set(slot_no);
+            eddystone_adv_slot_eid_ready(slot_no);
             #ifdef RANDOMIZE_MAC
             //Randomize the MAC address on every EID generation
             sd_rand_application_bytes_available_get(&bytes_available);
@@ -549,8 +549,8 @@ static void ecs_write_evt_handler(ble_ecs_t *        p_ecs,
             }
             eddystone_adv_slot_rw_adv_data_set(slot_no, &slot_data);
                 break;
-            //Long writes to the RW ADV Slot characteristic for configuring an EID frame
-            //with an ECDH key exchange
+            /*Long writes to the RW ADV Slot characteristic for configuring an EID frame
+            with an ECDH key exchange*/
             case BLE_ECS_EVT_RW_ADV_SLOT_PREP:
                 long_write_overwrite_flag = true;
 
@@ -873,10 +873,10 @@ static void services_and_modules_init(void)
     init_params.brdcst_cap.cap_bitfield         = ( (APP_IS_VARIABLE_ADV_SUPPORTED << ECS_BRDCST_VAR_ADV_SUPPORTED_Pos)
                                                   | (APP_IS_VARIABLE_TX_POWER_SUPPORTED << ECS_BRDCST_VAR_TX_POWER_SUPPORTED_Pos))
                                                   & (ECS_BRDCST_VAR_RFU_MASK);
-    init_params.brdcst_cap.supp_frame_types     = ( (ECS_FRAME_TYPE_URL_SUPPORTED_Yes << ECS_FRAME_TYPE_URL_SUPPORTED_Pos)
-                                                  | (ECS_FRAME_TYPE_UID_SUPPORTED_Yes << ECS_FRAME_TYPE_UID_SUPPORTED_Pos)
-                                                  | (ECS_FRAME_TYPE_TLM_SUPPORTED_Yes << ECS_FRAME_TYPE_TLM_SUPPORTED_Pos)
-                                                  | (ECS_FRAME_TYPE_EID_SUPPORTED_Yes << ECS_FRAME_TYPE_EID_SUPPORTED_Pos))
+    init_params.brdcst_cap.supp_frame_types     = ( (APP_IS_URL_SUPPORTED << ECS_FRAME_TYPE_URL_SUPPORTED_Pos)
+                                                  | (APP_IS_UID_SUPPORTED << ECS_FRAME_TYPE_UID_SUPPORTED_Pos)
+                                                  | (APP_IS_TLM_SUPPORTED << ECS_FRAME_TYPE_TLM_SUPPORTED_Pos)
+                                                  | (APP_IS_EID_SUPPORTED << ECS_FRAME_TYPE_EID_SUPPORTED_Pos))
                                                   & (ECS_FRAME_TYPE_RFU_MASK);
     memcpy(init_params.brdcst_cap.supp_radio_tx_power, tx_powers, ECS_NUM_OF_SUPORTED_TX_POWER);
 
@@ -884,12 +884,12 @@ static void services_and_modules_init(void)
     init_params.active_slot = 0;
 
     /*Init the advertising intervals characteristic*/
-    init_params.adv_intrvl = DEFAULT_NON_CONNECTABLE_ADV_INTERVAL_MS;
+    init_params.adv_intrvl = APP_CFG_NON_CONN_ADV_INTERVAL_MS;
 
     /*Init the radio tx power characteristic*/
-    init_params.adv_tx_pwr = 0x00;
+    init_params.adv_tx_pwr = APP_CFG_DEFAULT_RADIO_TX_POWER;
 
-    /*Init the radio tx power characteristic*/
+    /*Init the radio tx power characteristic (Currently not implemented)*/
     init_params.radio_tx_pwr = 0x00;
 
     /*Init the lock state characteristic*/
@@ -928,6 +928,8 @@ static void services_and_modules_init(void)
 
     //Initialize the slots with the initial values of the characteristics
     eddystone_adv_slots_init(&ecs_init);
+
+    eddystone_advertising_manager_init(m_ble_ecs.uuid_type);
 }
 
 void eddystone_ble_init()
@@ -937,5 +939,4 @@ void eddystone_ble_init()
     conn_params_init();
 
     services_and_modules_init();
-    eddystone_advertising_manager_init(m_ble_ecs.uuid_type);
 }

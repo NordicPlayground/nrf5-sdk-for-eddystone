@@ -8,6 +8,7 @@
 #include "eddystone_app_config.h"
 
 #define FLASH_BLOCK_SIZE    32  //Minimum size 32, for ECDH key storage
+#define WORD_SIZE           4
 
 #define FLASH_OP_WAIT()       uint32_t pending_ops = eddystone_flash_num_pending_ops(); \
                               while (pending_ops != 0)                                  \
@@ -17,6 +18,9 @@
 
 /**@brief struct for writing and reading persistent slot config to/from flash
  * @note size is word aligned and also matches flash block size of 32 bytes
+ * @details Data inside frame_data corresponds exactly to how the user would write to a slot's
+            R/W ADV Slot characteristic, except for the case of an EID slot. The frame_data array should
+            be filled with @ref eddystone_eid_config_t for and EID slot.
  */
 typedef PACKED(struct)
 {
@@ -27,11 +31,14 @@ typedef PACKED(struct)
     uint8_t                 data_length;
 } eddystone_flash_slot_config_t;
 
+/**@brief struct for keeping track of which slot has config that needs to restored read upon reboot
+ * @note size is word aligned and also matches flash block size of 32 bytes
+ */
 typedef struct
 {
-    bool    factory_state;
+    bool    factory_state;                                  //If this flag is true, then use factory default frame configs
     bool    slot_is_empty[APP_MAX_ADV_SLOTS];
-    uint8_t rfu[FLASH_BLOCK_SIZE-APP_MAX_ADV_SLOTS-1];    //fill the unused bytes with rfu
+    uint8_t padding[ WORD_SIZE - ((APP_MAX_ADV_SLOTS+1) % WORD_SIZE) ];    //Add padding up to the next multiple of WORD_SIZE
 } eddystone_flash_flags_t; //TODO: talk about having the flags struct match flash block size here
 
 typedef enum
@@ -86,7 +93,8 @@ bool eddystone_flash_read_is_empty(uint8_t * p_input_array, uint8_t length);
 uint32_t eddystone_flash_num_pending_ops(void);
 
 /**@brief Function for initializing the flash module
- *@retval see @ref pstorage_register
+ * @param[in] ps_cb    Callback for when a pstorage operation is complete
+ * @retval see @ref pstorage_register
  */
 ret_code_t eddystone_flash_init(pstorage_ntf_cb_t ps_cb);
 

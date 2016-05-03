@@ -148,7 +148,7 @@ static void eddystone_ble_registr_adv_cb(void)
         m_conn_adv_params.type           = BLE_GAP_ADV_TYPE_ADV_IND;
         m_non_conn_adv_params.p_peer_addr = NULL;                                // Undirected advertisement.
         m_non_conn_adv_params.fp          = BLE_GAP_ADV_FP_ANY;
-        m_conn_adv_params.interval       = MSEC_TO_UNITS(DEFAULT_CONNECTABLE_ADV_INTERVAL_MS, UNIT_0_625_MS);
+        m_conn_adv_params.interval       = MSEC_TO_UNITS(APP_CFG_CONNECTABLE_ADV_INTERVAL_MS, UNIT_0_625_MS);
         m_conn_adv_params.timeout        = APP_CFG_CONNECTABLE_ADV_TIMEOUT;
 
         m_is_connectable_adv = true;
@@ -231,11 +231,10 @@ static void fetch_adv_data_from_slot( uint8_t slot, uint8_array_t * p_eddystone_
             break;
         case EDDYSTONE_FRAME_TYPE_TLM:
             //If there are EIDs, broadcast eTLM, else just TLM
-            if (eddystone_adv_slot_num_of_current_eids(NULL) != 0)
+            if (eddystone_adv_slot_num_of_current_eids(NULL, NULL) != 0)
             {
                 //The current EIK slot that is paired with the current eTLM slot
                 uint8_t eik_pair_slot = m_etlm_adv_counter.eid_positions[m_etlm_adv_counter.eid_slot_counter];
-
                 eddystone_tlm_manager_etlm_get(eik_pair_slot, &(eddystone_adv_slot_params.p_adv_frame->etlm));
 
                 p_eddystone_data_array->p_data = (uint8_t *) &(eddystone_adv_slot_params.p_adv_frame->etlm);
@@ -254,7 +253,8 @@ static void fetch_adv_data_from_slot( uint8_t slot, uint8_array_t * p_eddystone_
             p_eddystone_data_array->size = sizeof(eddystone_eid_frame_t);
             break;
         default:
-            __NOP();
+           APP_ERROR_CHECK(NRF_ERROR_INVALID_DATA);
+           //Should never happen!
             break;
     }
 }
@@ -315,19 +315,39 @@ static void adv_interval_timer_start(void)
 
 static void intervals_calculate(void)
 {
-    //Buffers to hardcode a small shortening of the intervals just in case of any delays
-    //between all the running timer interrupts + encyrption processes of eTLMs so that each slot
-    //has enough time to advertise before the next advertising interval comes around
+
+    bool etlm_required = false;
+    uint8_t no_of_eid_slots = eddystone_adv_slot_num_of_current_eids(NULL, &etlm_required);
+
+    /*Buffers to hardcode a small shortening of the intervals just in case of any delays
+    between all the running timer interrupts (scheduled to main context) + variance in encyrption time
+    of eTLMs so that all slots have enough time to advertise before the next advertising interval comes around*/
 
     const uint8_t etlm_dist_buffer_ms = 25;
     const uint8_t slot_dist_buffer_ms = 25;
 
-    /**@note From current measurements at Nordic we can see that eTLM encryption takes about 140 ms on the NRF52
-    Which means that the delay after the timer interrupt fires to advertise and the actual eTLM advertisement is 140 ms */
+    /**@note From internal testing we can see that eTLM encryption takes about ~170 ms on the NRF52.
+    Which means that the delay after the timer interrupt fires to advertise and the actual eTLM advertisement is ~170 ms,
+    this is a significant limiting factor for the minimum advertising interval.
 
-    const uint16_t SLOT_INTERVAL_LIMIT = 500; //Minimum interval between two slots in ms
-    const uint16_t ETLM_INTERVAL_LIMIT = 300;  //Minimum interval between two eTLMs on the same slot in ms, must be > 140 ms
+    Please read the comments above @ref timers_init to see what is the current scheme of
+    advertising timing before continuing.
 
+    Thus if there N EIDs configured (N > 0) in the beacon and at least 1 TLM configured, then the TLM frame auto switches
+    to eTLM and cycles through the set of EIKs of the EIDs frames and advertises N eTLM frames, all within one slot interval,
+    each encrypted with the EIK of one of the EID slots. Hence there must be enough time alotted in 1 slot interval for N*(~170 ms + buffer).
+     */
+
+     /*Minimum interval between two eTLM advertisements (2+ EIDs) in one eTLM slot in ms*/
+     const uint16_t ETLM_INTERVAL_LIMIT = 225;  /*MUST be > ~170 ms + etlm_dist_buffer_ms */
+
+    /*Minimum interval between two slots in ms.
+     If eTLM is required then SLOT_INTERVAL_LIMIT becomes just the first half of the sum,
+     else the second half (MIN_NON_CONN_ADV_INTERVAL) since there is no significant real-time encrytion delays*/
+    const uint16_t SLOT_INTERVAL_LIMIT = (no_of_eid_slots*ETLM_INTERVAL_LIMIT)*(uint8_t)(etlm_required)
+                                          + MIN_NON_CONN_ADV_INTERVAL*((uint8_t)(!etlm_required));
+
+    DEBUG_PRINTF(0,"SLOT_INTERVAL_LIMIT: %d \r\n", SLOT_INTERVAL_LIMIT);
     //See if any slot is configured at all
     uint8_t no_of_currently_configed_slots = eddystone_adv_slot_num_of_configured_slots(m_currently_configured_slots);
     DEBUG_PRINTF(0,"Number of Configured Slots: %d \r\n", no_of_currently_configed_slots);
@@ -367,9 +387,7 @@ static void intervals_calculate(void)
         }
 
         //eTLM-eTLM interval
-        uint8_t no_of_eid_slots = eddystone_adv_slot_num_of_current_eids(NULL);
-
-        if (no_of_eid_slots != 0)
+        if (no_of_eid_slots != 0 && etlm_required == true)
         {
             m_intervals.etlm_etlm_interval = (m_intervals.slot_slot_interval/no_of_eid_slots) - etlm_dist_buffer_ms;
 
@@ -427,7 +445,7 @@ static void etlm_cycle_timeout(void * p_context)
 {
     sd_ble_gap_adv_stop();
 
-    if (m_etlm_adv_counter.eid_slot_counter >= eddystone_adv_slot_num_of_current_eids(NULL))
+    if (m_etlm_adv_counter.eid_slot_counter >= eddystone_adv_slot_num_of_current_eids(NULL, NULL))
     {
         m_etlm_adv_counter.eid_slot_counter = 0;
         app_timer_stop(m_eddystone_etlm_cycle_timer);
@@ -470,17 +488,11 @@ static void adv_slot_timeout(void * p_context)
             DEBUG_PRINTF(0,"Slot [%d] - frame type: 0x%02x \r\n", slot_no, adv_slot_params.frame_type);
 
             if ((adv_slot_params.frame_type == EDDYSTONE_FRAME_TYPE_TLM)
-                && eddystone_adv_slot_num_of_current_eids(m_etlm_adv_counter.eid_positions) != 0)
+                && eddystone_adv_slot_num_of_current_eids(m_etlm_adv_counter.eid_positions, NULL) != 0)
             {
-                // DEBUG_PRINTF(0, "EID positions ", 0);
-                // for (uint8_t i = 0; i < sizeof(m_etlm_adv_counter.eid_positions); i++)
-                // {
-                //     DEBUG_PRINTF(0, "0x%02x, ", m_etlm_adv_counter.eid_positions[i]);
-                // }
-                // DEBUG_PRINTF(0, "\r\n", 0);
                 etlm_cycle_timer_start(slot_no);
                 etlm_cycle_timeout(NULL);
-                //Spoof a timeout to advertisie right away
+                //Trigger a timeout to advertisie right away
             }
             else
             {
@@ -531,7 +543,7 @@ static void slots_advertising_start(void)
 /**@brief Function for initializing all required timers
  * @details The timer structure is illustrated below
  *          |-----------------------------|-----------------------------|  m_eddystone_adv_interval_timer (corresponds to the global advertising interval set in the slot)
- *          eTLM-----EID1-----EID2        eTLM-----EID1-----EID2           m_eddystone_adv_slot_timer (interval is the division of the advertising interval by the no. of slots configured)
+ *          eTLM-----EID1-----EID2        eTLM-----EID1-----EID2           m_eddystone_adv_slot_timer (slot interval is the division of the advertising interval by the no. of slots configured)
  *          EIK1-EIK2                     EIK1-EIK2                        m_eddystone_etlm_cycle_timer (Cycles through each existing EID's EIK and pairs it with the eTLM)
  */
 static void timers_init(void)

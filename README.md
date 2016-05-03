@@ -19,12 +19,23 @@ This is an example implementation of the Eddystone GATT Configuration Service fo
 * [License](#license)
 
 ## Release note
+* __v0.7__ (April 29 2016)
+
+    * Added persistent slot configurations feature so that after power loss or intentional reset of the chip, all previously configured slots will be restored from flash memory. Note that in order for slots to be saved to flash memory, a BLE Disconnect event must occur before any accidental or intentional power loss.
+    * EID clock values are now written to flash memory every 24 hours as recommended by Google's [spec](https://github.com/google/eddystone/blob/master/eddystone-eid/eid-computation.md) for recovering from power loss regarding EID computation.
+    * Merged in via script the cifra crypto library's fix for a [known issue](https://github.com/ctz/cifra/issues/3) with EAX encryption of the eTLM frames. Now eTLM frames are properly encrypted. Make sure to run `crypto_setup_all.sh` so the correct commits are checked out.
+    * Added a stand-alone application hex file without the softdevice merged in so it can be DFUed with a bootloader.
+    * Other small stability improvements, bug fixes, and house cleaning.
+    * Updated README with [How it works](#how-it-works) section explaining the different modules in the firmware.
+
+
 * __v0.6__ (April 21 2016)
     * Revamped folder structures and project setup procedure to allow for better user setup experience. Namely the downloading of SDK via scripts. Details described below in [How to install](#how-to-install).
-    * Merged in cifra crypto library's fix for a [known issue](https://github.com/ctz/cifra/issues/3) with EAX encryption of the eTLM frames. Now eTLM frames are properly encrypted.
+    * ~~Merged in cifra crypto library's fix for a [known issue](https://github.com/ctz/cifra/issues/3) with EAX encryption of the eTLM frames. Now eTLM frames are properly encrypted.~~
     * Fixed a bug with the EID slot 4-byte clock being slow.
     * Added scan response capability when the beacon is put into connectable mode which contains `nRF5_Eddy` as the device name and the Eddystone Configuration GATT Service UUID `a3c87500-8ed3-4bdf-8a39-a01bebede295` as the UUID in the scan response packet, as recommended by the latest [spec](https://github.com/google/eddystone/tree/master/configuration-service) from Google.
     * Improved LED Indication for different beacon states: Advertising, Advertising in connectable mode, Connected. Details below in [How to use](#how-to-use).
+    * Improved connection stability with "Error 133" commonly seen on Samsungs by adding the Peripheral Preferred Connection Parameters characteristic
 
 * __v0.5__ (April 15 2016)
     * First public release
@@ -93,11 +104,10 @@ The application might work with other versions of the SDK/Keil but some modifica
 * Android phone 4.3+
 
 ## Known issues
-* Keil and SEGGER Embedded Studio (GCC) are currently supported. IAR and Makefile based GCC project is scheduled for a future release.
-* When using SEGGER Embedded Studio two files in Nordic's SDK must be modified. These are 'retarget.c' and 'app_util_platform.h.' In 'retarget.c' lines 29&30 (FILE __stdout;) must be commented out. In 'app_util_platform.h' #define PACKED(TYPE) TYPE __attribute__((packed)) must be used instead of #define PACKED(TYPE) __packed TYPE. (These are bugs in the SDK and have been reported).
-* After an Eddystone-EID slot is configured it will be preserved after power cycling. However, if you try to read the ECDH key again from the characteristic it will not be available. Slots containing other frame types are not preserved after power cycling.
+* Only Keil is supported for now. GCC and IAR are scheduled for a future release.
+* Only Windows development environment is supported for now. Linux and OSX are scheduled for a later release. You may still flash the firmware using the [Quick start](#quick-start) guide.
+>>>>>>> master
 * When compiling there are warnings from the third-party crypto libraries.
-
 
 ## How to install
 #### Quick start
@@ -105,9 +115,9 @@ This is the recommended approach if you just want to get started quickly without
 
 *  Connect the nRF52 DK to your computer. It will show up as a JLINK USB drive.
 
-*  Download the `nrf5_sdk_for_eddystone_v0.6.hex` file in the hex folder in this repository.
+*  Download the `nrf5_sdk_for_eddystone_v0.7.hex` file in the hex folder in this repository.
 
-*  Drag and drop the `nrf5_sdk_for_eddystone_v0.6.hex` file on the JLINK drive to automatically program the nRF52 DK.
+*  Drag and drop the `nrf5_sdk_for_eddystone_v0.7.hex` file on the JLINK drive to automatically program the nRF52 DK.
 
 *  Install the nRF Beacon for Eddystone Android App from [Play Store](https://play.google.com/store/apps/details?id=no.nordicsemi.android.nrfbeacon.nearby).
 
@@ -184,7 +194,60 @@ Please note that after pressing Button 1, the DK will only broadcast in "Connect
 Detailed instructions on how to use the App is available in the [nRF Beacon for Eddystone GitHub repository](https://github.com/NordicSemiconductor/Android-nRF-Beacon-for-Eddystone).
 
 ## How it works
-Instructions on the firmware structure and on how to modify the firmware are coming soon.
+### Modules
+The firmware is mainly broken up in several modules that each handle specific functionalities required by the Eddystone specification.
+* **eddystone_ble_handler**
+    * Here is where the BLE functionalities are initialized along with all the other modules in the firmware. It's essentially the practical main file of the project.
+    * In `services_and_modules_init` you can see how the broadcast capabilities are set via the `ble_ecs_init_params_t` struct and can change the defined macros (prefixed with `APP_`) accordingly in `eddystone_app_config.h` to reflect your needs.
+    * The module is also responsible for handling all BLE events coming from the softdevice and dispatching them to the other modules that need them.
+    * Most importantly this module controls all the R/W authorizations of the Eddystone Configuration GATT Service. Any characteristic R/W events coming from the Central is handled here in `ecs_read_evt_handler()` and `ecs_write_evt_handler()` so the correct per slot information and security information can be accessed in the `eddystone_adv_slot` and `eddystone_security` modules before R/W of the characteristic values.
+
+
+* **eddystone_adv_slot**
+    * This module is the data core of the firmware which contains all the data (non-security related) in the slots with which the BLE Central interact.
+
+    Essentially this module contains an array of `eddystone_adv_slot_t` structures, with each structure representing a slot: parameters such as the advertising interval and radio tx power are written to and retrieved from here, and it's also responsible for formating and keeping the data of the actual frames (`adv_frame` member of the struct) to be broadcast (which are retrieved and advertised by the `eddystone_advertising_manager`) or to be read from R/W ADV Slot characteristic. The exception is for TLMs/eTLMs which is generated in real-time by `eddystone_tlm_manager`'s `eddystone_tlm_manager_tlm_get()`/`eddystone_tlm_manager_etlm_get()`every time the `eddystone_advertising_manager` needs to broadcast a TLM/eTLM and the advertised packet is copied back into the slot's `adv_frame` via a pointer so that when the user reads it in characteristic 10, the last advertised packet will be displayed.
+
+
+* **eddystone_security**
+    * The security module does exactly what it sounds like it does, security. All the encryption/decryption processes such as validating the unlock key, generating and exchanging ECDH keys, eTLM encryption etc. are handled here here and it acts as an abstraction layer to the 3rd party crypto libraries that we use. Similar to `eddystone_adv_slot`, the security module contains an array of `eddystone_security_slot_t` structures that contain all the necessary data to maintain an EID.
+    * One notable function that might be of interest for developers is `eddystone_security_lock_code_init()` since it determines how the lock code it generated.
+        * Since the lock code is suppose to be an unique 16-byte value for any device, one way is to use the `DEVICEID` register of the `FICR` to get 8 bytes of unique value, then it's up to the developer to implement how the other 8 bytes are created.
+        * For easier debugging and development purposes, there is currently an `STATIC_LOCK_CODE` definition which hard-codes the lock key to all 0xFFs.
+
+
+* **eddystone_flash**
+  * The flash module is an abstraction of the SDKs `pstorage` library and it organizes the flash blocks (32 byte each) nicely to fit the persistent data needs of Eddystone specifically. This module is used by `eddystone_adv_slot` to preserve and restore slot configurations between reboots, and used by `eddystone_security` to store the lock key and EID information. Check out the corresponding structures in the firmware to see how the data fields in each block are populated.
+
+###### Flash blocks arragemnet
+
+| Block No.       | Data Type      | Corresponding Structure |
+| ------------- |:-------------:|:-------------:|
+| 0     | Slot Configuration | `eddystone_flash_slot_config_t` |
+| 1,2,3...        | Slot Configuration |  `eddystone_flash_slot_config_t` |
+| APP_MAX_ADV_SLOTS - 1 | Slot Configuration |  `eddystone_flash_slot_config_t` |
+| APP_MAX_ADV_SLOTS | Private ECDH Key |  32 byte array |
+| APP_MAX_ADV_SLOTS + 1 | Public ECDH Key |  32 byte array |
+| APP_MAX_ADV_SLOTS + 2 | Lock Key | 16 byte array |
+| APP_MAX_ADV_SLOTS + 3 | Flash Flags | `eddystone_flash_flags_t` |
+
+
+* **eddystone_advertising_manager**
+ * The advertising manager module manages the retrieval of advertising data from `eddystone_adv_slot`and adjusts the advertising intervals provided by the user to fit the capabilities of the hardware (esp. for eTLM encryption) before broadcasting the data. Read the comments inside `intervals_calculate()` to see the details of how advertising interval limits are handled and how you as a developer can tweak this to fit your needs.
+ * Currently the advertising manager is set up to implement global advertising intervals only, but it can be adapted with some work to implement variable advertising interval by modifying how the timers behave in the module. The key function to note is `fetch_adv_data_from_slot` which gets the data from the `eddystone_adv_slot` module in the proper format and puts it into `ble_advdata_set`.
+
+
+* **eddystone_registration_ui**
+ * A simple `app_button` implementation that triggers a callback into `eddystone_advertising_manager` when `BUTTON_1` is pressed in order to go into connectable mode advertising for registration and configuration of the beacon. This module can easily
+ be modified to use another type of HW UI such as NFC, as long as a callback is made to `eddystone_advertising_manager` when the user action is detected.
+
+* **eddystone_tlm_manager**
+ * Module for computing the TLM frame in real-time whenever it is required by `eddystone_advertising_manager`. Currently it has no implementation of battery voltage sampling but it can be added by the developer by using the on-chip ADC and some wiring in the DK.
+
+### User Configs
+ Inside `project\pca10040_s132\config` you can find `debug_config.h` and `eddystone_app_config.h` which are useful for changing the debug and application behaviour respectively. Read the comments in those files for details.
+
+
 
 ## Issues and support
 This example application is provided as a firmware foundation for beacon providers or for users simply wanting to experiment with Eddystone. It is not part of the official nRF5 SDK and support is therefore limited. Expect limited follow-up of issues.
