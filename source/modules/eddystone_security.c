@@ -253,20 +253,20 @@ static void eddystone_security_lock_code_init(uint8_t * p_lock_buff)
     //If no lock keys exist, then generate one and copy it to buffer
     if(eddystone_flash_read_is_empty(p_lock_buff, ECS_AES_KEY_SIZE))
     {
-        uint8_t  cpy_offset = ECS_AES_KEY_SIZE/2;
+        const uint8_t cpy_offset = ECS_AES_KEY_SIZE/2;
 
         #ifdef UNIQUE_LOCK_CODE
         uint32_t device_id[2] = {NRF_FICR->DEVICEID[0],NRF_FICR->DEVICEID[1]};
-        uint8_t  random_num[8] = {0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08};
+        uint8_t  lower_half[8] = {0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08};
         #endif
 
         #ifdef STATIC_LOCK_CODE
         uint8_t device_id[8] = {0xFF, 0xFF,0xFF, 0xFF,0xFF, 0xFF,0xFF, 0xFF};
-        uint8_t  random_num[8] = {0xFF, 0xFF,0xFF, 0xFF,0xFF, 0xFF,0xFF, 0xFF};
+        uint8_t lower_half[8] = {0xFF, 0xFF,0xFF, 0xFF,0xFF, 0xFF,0xFF, 0xFF};
         #endif
 
         memcpy(p_lock_buff, device_id, sizeof(device_id));
-        memcpy(p_lock_buff + cpy_offset, random_num, sizeof(random_num));
+        memcpy(p_lock_buff + cpy_offset, lower_half, sizeof(lower_half));
 
         DEBUG_PRINTF(0, "Writing Lock Key to Flash \r\n",0);
 
@@ -404,6 +404,7 @@ ret_code_t eddystone_security_shared_ik_receive( uint8_t slot_no, uint8_t * p_en
 
     m_security_slot[slot_no].is_occupied = true;
     m_security_slot[slot_no].timing.k_scaler = scaler_k;
+    m_security_slot[slot_no].timing.seconds = 65280;
 
     AES128_ECB_decrypt(p_encrypted_ik, m_aes_ecb_lk.key, m_security_slot[slot_no].aes_ecb_ik.key);
 
@@ -478,6 +479,7 @@ ret_code_t eddystone_security_client_pub_ecdh_receive( uint8_t slot_no, uint8_t 
 
     m_security_slot[slot_no].is_occupied = true;
     m_security_slot[slot_no].timing.k_scaler = scaler_k;
+    m_security_slot[slot_no].timing.seconds = 65280;
 
     uint8_t zeros[ECS_ECDH_KEY_SIZE] = {0};                // Array of zeros for checking if there are already keys
 
