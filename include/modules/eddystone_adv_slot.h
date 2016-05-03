@@ -155,14 +155,16 @@ void eddystone_adv_slot_eid_ready( uint8_t slot_no );
 
 /**@brief Function for getting the id and total number of slots that are EIDs
 *
-* @param[out]       p_which_slots_are_eids   optional: (pass in NULL to not us this feature)
-*                                            pointer to a buffer at least APP_MAX_EID_SLOTS in length,
-*                                            the buffer will be filled with the no. of the slots that are
+* @param[out]       p_which_slots_are_eids   optional: (pass in NULL to not use this feature)
+                                             pointer to a buffer at least APP_MAX_EID_SLOTS in length,
+                                             the buffer will be filled with the no. of the slots that are
                                              configured as EIDs in increasing order, 0xFF represent blanks
                                              (e.g. [0,2,5, 0xFF, 0xFF, 0xFF...] means slots 0,2,5 are EID slots)
+* @param[out]       p_etlm_required          Handy output variable to know if any eTLM is required (both TLM and EID exist)
+                                             (pass in NULL to not use this feature)
 * @retval          the total number of slots that are currently configured as EIDs
 */
-uint8_t eddystone_adv_slot_num_of_current_eids(uint8_t * p_which_slots_are_eids);
+uint8_t eddystone_adv_slot_num_of_current_eids(uint8_t * p_which_slots_are_eids, bool * p_etlm_required);
 
 /**@brief Similar to @ref eddystone_adv_slot_num_of_current_eids */
 uint8_t eddystone_adv_slot_num_of_configured_slots(uint8_t * p_which_slots_are_configured);

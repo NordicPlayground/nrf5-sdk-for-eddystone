@@ -383,7 +383,10 @@ void eddystone_adv_slot_rw_adv_data_get( uint8_t slot_no, ble_ecs_rw_adv_slot_t 
                     p_frame_data->char_length = m_slots[slot_no].frame_write_length + 1; //+1 for RSSI byte onto the write length
                     break;
                 case EDDYSTONE_FRAME_TYPE_TLM:
-                    if (eddystone_adv_slot_num_of_current_eids(NULL) == 0)
+                    //The data in adv_frame.tlm is set via a pointer memcpy everytime the advertising_manager
+                    //advertises a TLM/eTLM so that upon a read of the slot the user will receive the last
+                    //advertised packet, as required by the eddystone spec.
+                    if (eddystone_adv_slot_num_of_current_eids(NULL, NULL) == 0)
                     {
                         p_frame_data->p_data = (int8_t*)&(m_slots[slot_no].adv_frame.tlm.version);
                         p_frame_data->char_length = EDDYSTONE_TLM_LENGTH;
@@ -461,15 +464,22 @@ uint8_t eddystone_adv_slot_num_of_configured_slots(uint8_t * p_which_slots_are_c
     }
     return slots_count;
 }
-uint8_t eddystone_adv_slot_num_of_current_eids(uint8_t * p_which_slots_are_eids)
+uint8_t eddystone_adv_slot_num_of_current_eids(uint8_t * p_which_slots_are_eids, bool * p_etlm_required)
 {
     uint8_t eid_count = 0;
+    bool tlm_exists = false;
+
     if (p_which_slots_are_eids != NULL)
     {
         memset(p_which_slots_are_eids, 0xFF, APP_MAX_EID_SLOTS);
     }
     for (uint8_t i = 0; i < APP_MAX_EID_SLOTS; i++)
     {
+        if (m_slots[i].frame_write_buffer[0] == EDDYSTONE_FRAME_TYPE_TLM)
+        {
+            tlm_exists = true;
+        }
+
         if (m_slots[i].frame_write_buffer[0] == EDDYSTONE_FRAME_TYPE_EID)
         {
             if (p_which_slots_are_eids != NULL)
@@ -479,6 +489,16 @@ uint8_t eddystone_adv_slot_num_of_current_eids(uint8_t * p_which_slots_are_eids)
             eid_count++;
         }
     }
+
+    if (p_etlm_required != NULL && eid_count > 0 && tlm_exists == true )
+    {
+        *p_etlm_required = true;
+    }
+    else if (p_etlm_required != NULL)
+    {
+        *p_etlm_required = false;
+    }
+
     return eid_count;
 }
 
@@ -541,14 +561,12 @@ static uint32_t eddystone_adv_slot_adv_frame_set(uint8_t slot_no)
         case EDDYSTONE_FRAME_TYPE_TLM:
             if ((m_slots[slot_no].frame_write_length == ECS_TLM_WRITE_LENGTH)) //1 byte
             {
-                if (eddystone_adv_slot_num_of_current_eids(eid_slot_positions) == 0)
+                if (eddystone_adv_slot_num_of_current_eids(eid_slot_positions, NULL) == 0)
                 {
-                    DEBUG_PRINTF(0,"setting TLM \r\n",0);
                     eddystone_tlm_manager_tlm_get(&m_slots[slot_no].adv_frame.tlm);
                 }
                 else
                 {
-                    DEBUG_PRINTF(0,"setting eTLM \r\n",0);
                     eddystone_tlm_manager_etlm_get(eid_slot_positions[0], &m_slots[slot_no].adv_frame.etlm);
                 }
             }
