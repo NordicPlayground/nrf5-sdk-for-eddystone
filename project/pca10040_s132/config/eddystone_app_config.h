@@ -18,7 +18,7 @@
 #define SCHED_QUEUE_SIZE                                10
 
 //BLE CONFIGS
-#define APP_DEVICE_NAME                                 "nRF5-Eddy"
+#define APP_DEVICE_NAME                                 "nRF5-Eddy"                       /**< Advertised device name inside scan response when in connectable mode **/
 #define IS_SRVC_CHANGED_CHARACT_PRESENT                 0                                 /**< Include the service changed characteristic. If not enabled, the server's database cannot be changed for the lifetime of the device. */
 
 #define CENTRAL_LINK_COUNT                              0                                 /**<number of central links used by the application. When changing this number remember to adjust the RAM settings*/
@@ -42,8 +42,10 @@
 
 //EDDYSTONE CONFIGS
 #define APP_MAX_ADV_SLOTS                               5
-#define APP_MAX_EID_SLOTS                               APP_MAX_ADV_SLOTS  //!MAX EID SLOT SHOULD NOT BE DIFFERENT THAN MAX EID SLOT AT THE MOMENT
+#define APP_MAX_EID_SLOTS                               APP_MAX_ADV_SLOTS  /*MAX EID SLOT SHOULD NOT BE DIFFERENT THAN APP_MAX_ADV_SLOTS WITHOUT MODIFICATION
+                                                                            to the eddystone_security module since the security slots' slot numbers map 1 to 1 to the advertising slots'*/
 
+//Broadcast Capabilities
 #define APP_IS_VARIABLE_ADV_SUPPORTED                   ECS_BRDCST_VAR_ADV_SUPPORTED_No
 #define APP_IS_VARIABLE_TX_POWER_SUPPORTED              ECS_BRDCST_VAR_TX_POWER_SUPPORTED_Yes
 
