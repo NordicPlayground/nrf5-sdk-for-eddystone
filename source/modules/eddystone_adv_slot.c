@@ -23,7 +23,7 @@
 #endif
 
 //Forward Declaration:
-uint32_t eddystone_adv_slot_adv_frame_set(uint8_t slot_no);
+static uint32_t eddystone_adv_slot_adv_frame_set(uint8_t slot_no);
 static void eddystone_adv_frame_set_scheduler_evt( void * p_event_data, uint16_t event_size );
 static void eddystone_adv_slot_load_from_flash( uint8_t slot_no );
 

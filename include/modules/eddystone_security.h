@@ -4,7 +4,6 @@
 #include "ble_ecs.h"
 #include "app_error.h"
 
-
 typedef enum
 {
     EDDYSTONE_SECURITY_MSG_UNLOCKED,        /**< Beacon is Unlocked*/
