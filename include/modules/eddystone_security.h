@@ -21,7 +21,7 @@ typedef struct
     eddystone_security_msg_cb_t    msg_cb;  /**< Callback function pointer used by the security module to pass out events*/
 } eddystone_security_init_t;
 
-/**@brief structure to restore an EID slot*/
+/**@brief structure used to preserve/restore an EID slot*/
 typedef PACKED(struct)
 {
     eddystone_frame_type_t frame_type;

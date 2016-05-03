@@ -37,21 +37,21 @@ ret_code_t eddystone_flash_access_lock_key(uint8_t * p_lock_key, eddystone_flash
         case EDDYSTONE_FLASH_ACCESS_READ:
             err_code = pstorage_load(p_lock_key,
                                      &lock_key_handle,
-                                     FLASH_BLOCK_SIZE,
+                                     ECS_AES_KEY_SIZE,
                                      0);
             RETURN_IF_ERROR(err_code);
             break;
         case EDDYSTONE_FLASH_ACCESS_WRITE:
-            memcpy(m_flash_buffers[blk_index].buffer, p_lock_key, FLASH_BLOCK_SIZE);
+            memcpy(m_flash_buffers[blk_index].buffer, p_lock_key, ECS_AES_KEY_SIZE);
             err_code = pstorage_update(&lock_key_handle,
                                        m_flash_buffers[blk_index].buffer,
-                                       FLASH_BLOCK_SIZE,
+                                       ECS_AES_KEY_SIZE,
                                        0);
             RETURN_IF_ERROR(err_code);
             break;
         case EDDYSTONE_FLASH_ACCESS_CLEAR:
             err_code = pstorage_clear(&lock_key_handle,
-                                      FLASH_BLOCK_SIZE);
+                                      ECS_AES_KEY_SIZE);
             RETURN_IF_ERROR(err_code);
             break;
         default:
