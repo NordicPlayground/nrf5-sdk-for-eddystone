@@ -96,7 +96,7 @@ Characteristic | Name | Status
 
 #### Software
 * [Keil uVision 5 IDE](https://www.keil.com/demo/eval/arm.htm) (Note: you must have a registered version of Keil in order to compile source code that generates more than 32kB of code and data, currently this project generates 39 kB even with -O3 optimization level).
-* [SEGGER Embedded Studio IDE](https://www.segger.com/downloads/embeddedstudio) with the [nRF](https://devzone.nordicsemi.com/attachment/315266173907f1c16d81f842f0796730) and CMSIS packs installed. (Note: If you don't have a Keil license or you are developing on Mac OS X or Linux this is the best option).
+* [SEGGER Embedded Studio IDE](https://www.segger.com/downloads/embeddedstudio) (Note: If you don't have a Keil license or you are developing on Mac OS X or Linux this is the best option).
 * [Git Bash](https://git-scm.com/downloads).
 * [nRFgo Studio](https://www.nordicsemi.com/eng/nordic/Products/nRFgo-Studio/nRFgo-Studio-Win64/14964) (Note: Not required if using SEGGER Embedded Studio).
 
@@ -180,7 +180,23 @@ The Softdevice can be flashed in with Nordic's [nRFgo Studio](https://www.nordic
 ```
 nrf5-sdk-for-eddystone\project\pca10040_s132\embedded_studio
 ```
+*  Manually install the [nRF](https://devzone.nordicsemi.com/attachment/315266173907f1c16d81f842f0796730) device family pack by downloading it here, and in Embedded Studio go to Tools->Packages->Manually install packages and select it. Install the CMSIS-CORE Support Package by going to Tools->Package Manager and double clicking it.
+*  Currently there is a bug in our SDK when compiling with GCC. In 'app_util_platform.h' you need to replace:
+```c
+#define PACKED(TYPE) __packed TYPE // This should be line 87.
+```
+with this:
+```c
+#if defined(__CC_ARM) 
+    #define PACKED(TYPE) __packed TYPE
+#elif defined(__ICCARM__)
+    #define PACKED(TYPE) __packed TYPE
+#else
+    #define PACKED(TYPE) TYPE __attribute__((packed))
+#endif
+```
 *  Build and run/debug the project.
+*  Note (if your SoftDevice is in a different location than default and you get an error when loading, in Project Properties->Debugger->Loader Options, change Additional Load File[0] to point to the location of s132_nrf52_2.0.0_softdevice.hex.
 
 ## How to use
 After flashing the firmware to a nRF52 DK it will automatically start broadcasting a Eddystone-URL pointing to http://www.nordicsemi.com, with LED 1 blinking. In order to configure the beacon to broadcast a different URL or a different frame type it is necessary to put the DK in configuration mode by pressing Button 1 on the DK so it starts advertising in "Connectable Mode". After that, it can be connected to nRF Beacon for Eddystone app, which allows the writing of the Lock Key to the Unlock Characteristic.
