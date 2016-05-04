@@ -180,14 +180,14 @@ The Softdevice can be flashed in with Nordic's [nRFgo Studio](https://www.nordic
 ```
 nrf5-sdk-for-eddystone\project\pca10040_s132\embedded_studio
 ```
-*  Manually install the [nRF](https://devzone.nordicsemi.com/attachment/315266173907f1c16d81f842f0796730) device family pack by downloading it here, and in Embedded Studio go to Tools->Packages->Manually install packages and select it. Install the CMSIS-CORE Support Package by going to Tools->Package Manager and double clicking it.
+*  Manually install the [nRF](https://devzone.nordicsemi.com/attachment/315266173907f1c16d81f842f0796730) device family pack by downloading it here, and in Embedded Studio go to Tools->Packages->Manually install packages, and select it. Install the CMSIS-CORE Support Package by going to Tools->Package Manager, and double clicking it.
 *  Currently there is a bug in our SDK when compiling with GCC. In 'app_util_platform.h' you need to replace:
 ```c
 #define PACKED(TYPE) __packed TYPE // This should be line 87.
 ```
 with this:
 ```c
-#if defined(__CC_ARM) 
+#if defined(__CC_ARM)
     #define PACKED(TYPE) __packed TYPE
 #elif defined(__ICCARM__)
     #define PACKED(TYPE) __packed TYPE
@@ -196,7 +196,6 @@ with this:
 #endif
 ```
 *  Build and run/debug the project.
-*  Note (if your SoftDevice is in a different location than default and you get an error when loading, in Project Properties->Debugger->Loader Options, change Additional Load File[0] to point to the location of s132_nrf52_2.0.0_softdevice.hex.
 
 ## How to use
 After flashing the firmware to a nRF52 DK it will automatically start broadcasting a Eddystone-URL pointing to http://www.nordicsemi.com, with LED 1 blinking. In order to configure the beacon to broadcast a different URL or a different frame type it is necessary to put the DK in configuration mode by pressing Button 1 on the DK so it starts advertising in "Connectable Mode". After that, it can be connected to nRF Beacon for Eddystone app, which allows the writing of the Lock Key to the Unlock Characteristic.
