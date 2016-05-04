@@ -19,6 +19,9 @@ This is an example implementation of the Eddystone GATT Configuration Service fo
 * [License](#license)
 
 ## Release note
+* __v0.7.1__ (may 4 2016)
+    * __NEW!__ Support for SEGGER Embedded Studio, a cross-platform firmware IDE for OSX, Windows and Linux! Great for developers who do not own a Keil license or is developing on OSX/Linux.
+
 * __v0.7__ (April 29 2016)
 
     * Added persistent slot configurations feature so that after power loss or intentional reset of the chip, all previously configured slots will be restored from flash memory. Note that in order for slots to be saved to flash memory, a BLE Disconnect event must occur before any accidental or intentional power loss.
