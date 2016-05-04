@@ -52,6 +52,12 @@
 #define  RTC1_TICKS_MAX          16777216
 #define  TK_ROLLOVER             0x10000
 
+#define NONCE_SIZE    (6)
+#define TAG_SIZE      (2)
+#define SALT_SIZE     (2)
+#define TLM_DATA_SIZE (EDDYSTONE_TLM_LENGTH - 2)
+#define EIK_SIZE      (ECS_AES_KEY_SIZE)
+
 static eddystone_security_init_t m_security_init;
 
 static nrf_ecb_hal_data_t m_aes_ecb_lk;    //AES encryption struct of global lock key
@@ -650,14 +656,6 @@ void eddystone_security_plain_eid_id_key_get(uint8_t slot_no, uint8_t * p_key_bu
 
 void eddystone_security_tlm_to_etlm( uint8_t ik_slot_no, eddystone_tlm_frame_t * p_tlm, eddystone_etlm_frame_t * p_etlm)
 {
-    //Data Preparation
-    //--------------------------------------------------------------------------
-    const uint8_t NONCE_SIZE    = 6;
-    const uint8_t TAG_SIZE      = 2;
-    const uint8_t SALT_SIZE     = 2;
-    const uint8_t TLM_DATA_SIZE = EDDYSTONE_TLM_LENGTH - 2;
-    const uint8_t EIK_SIZE      = ECS_AES_KEY_SIZE;
-
     cf_prp prp;                                                     // Describe the block cipher to use.
 
     uint8_t plain[TLM_DATA_SIZE]  = {0};                            // plaintext tlm, without the frame byte and version

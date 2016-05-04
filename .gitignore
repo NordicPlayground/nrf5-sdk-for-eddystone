@@ -1,3 +1,8 @@
+## SEGGER Embedded Studio and JLink ##
+project/pca10040_s132/embedded_studio/Output/
+project/pca10040_s132/embedded_studio/experimental_ble_app_eddystone_s132_pca10040.emSession
+project/pca10040_s132/embedded_studio/nrf52832_xxaa_s132_Debug.jlink
+
 ## KEIL AND JLINK ##
 _build
 RTE

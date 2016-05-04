@@ -1,0 +1,171 @@
+<!DOCTYPE CrossStudio_Project_File>
+<solution
+  Name="experimental_ble_app_eddystone_s132_pca10040"
+  target="8"
+  version="2">
+  <project Name="nrf52832_xxaa_s132">
+    <configuration
+      Name="Common"
+      Placement="Flash"
+      Target="nRF52832_xxAA"
+      arm_architecture="v7EM"
+      arm_core_type="Cortex-M4"
+      arm_endian="Little"
+      arm_fp_abi="Hard"
+      arm_fpu_type="FPv4-SP-D16"
+      arm_interwork="No"
+      arm_linker_heap_size="2048"
+      arm_linker_process_stack_size="0"
+      arm_linker_stack_size="4096"
+      arm_simulator_memory_simulation_parameter="ROM;0x00000000;0x00080000;RAM;0x20000000;0x00010000"
+      arm_target_debug_interface_type="ADIv5"
+      arm_target_device_name="nRF52832_xxAA"
+      arm_target_interface_type="SWD"
+      c_preprocessor_definitions="BLE_STACK_SUPPORT_REQD;NRF52_PAN_53;NRF52_PAN_15;NRF52_PAN_54;NRF52_PAN_20;NRF52_PAN_55;NRF52_PAN_30;NRF52_PAN_58;NRF52_PAN_31;NRF52_PAN_62;NRF52_PAN_36;NRF52_PAN_63;NRF52_PAN_51;NRF52_PAN_64;CONFIG_GPIO_AS_PINRESET;BOARD_PCA10040;NRF52_PAN_12;S132;NRF_LOG_USES_RTT=1;NRF52;SOFTDEVICE_PRESENT;SWI_DISABLE0;BOARD_PCA10040;NO_VTOR_CONFIG;DEBUG"
+      c_user_include_directories="$(PackagesDir)/CMSIS_4/CMSIS/Include;../config/experimental_ble_app_eddystone_s132_pca10040;../config;../../../sdk_components/ble/common;../../../sdk_components/drivers_ext/segger_rtt;../../../sdk_components/drivers_nrf/common;../../../sdk_components/drivers_nrf/config;../../../sdk_components/drivers_nrf/delay;../../../sdk_components/drivers_nrf/gpiote;../../../sdk_components/drivers_nrf/hal;../../../sdk_components/drivers_nrf/uart;../../../sdk_components/libraries/button;../../../sdk_components/libraries/timer;../../../sdk_components/libraries/uart;../../../sdk_components/libraries/util;../../../sdk_components/softdevice/common/softdevice_handler;../../../sdk_components/softdevice/s132/headers;../../../sdk_components/softdevice/s132/headers/nrf52;../../../sdk_components/toolchain;../../../include/ble_services;../../../include/modules;../../../include/def;../../../include/config;../../../sdk_components/ble/ble_advertising;../../../sdk_components/libraries/trace;../../../sdk_components/drivers_nrf/pstorage;../../../include/util;../../../sdk_components/libraries/scheduler;../../../sdk_components/libraries/fstorage;../../../sdk_components/libraries/experimental_section_vars;../../../source/crypto_libs/cifra;../../../source/crypto_libs/rfc6234;../../../source/crypto_libs/;../../../sdk_components/libraries/fstorage/config;../../../sdk_external/segger_rtt;../../../bsp"
+      debug_additional_load_file="C:/Users/midi/Documents/nRF5_SDK_11.0.0_89a8197/components/softdevice/s132/hex/s132_nrf52_2.0.0_softdevice.hex"
+      debug_register_definition_file="$(PackagesDir)/nRF/XML/nrf52_Registers.xml"
+      debug_start_from_entry_point_symbol="No"
+      debug_target_connection="J-Link"
+      gcc_entry_point="Reset_Handler"
+      linker_memory_map_file="$(PackagesDir)/nRF/XML/nRF52832_xxAA_MemoryMap.xml"
+      linker_output_format="hex"
+      linker_section_placement_file="$(StudioDir)/targets/Cortex_M/flash_placement.xml"
+      linker_section_placement_macros="FLASH_START=0x1C000  ;SRAM_START=0x20001FE8  "
+      macros="DeviceHeaderFile=$(PackagesDir)/nRF/CMSIS/Device/Include/nrf.h;DeviceLibraryIdentifier=M4lf;DeviceSystemFile=$(PackagesDir)/nRF/CMSIS/Device/Source/system_nrf52.c;DeviceVectorsFile=$(PackagesDir)/nRF/Source/nrf52_Vectors.s;DeviceFamily=nRF"
+      package_dependencies="nRF"
+      project_directory=""
+      project_type="Executable"
+      property_groups_file_path="$(PackagesDir)/nRF/XML/property_groups.xml"
+      target_reset_script="Reset();"
+      target_trace_initialize_script="EnableTrace(&quot;$(TraceInterfaceType)&quot;)" />
+    <folder Name="Source Files">
+      <folder Name="Application">
+        <file file_name="../main.c" />
+      </folder>
+      <folder Name="Board Support">
+        <file file_name="../../../bsp/bsp.c" />
+      </folder>
+      <folder Name="nRF_BLE">
+        <file file_name="../../../sdk_components/ble/common/ble_advdata.c" />
+        <file file_name="../../../sdk_components/ble/common/ble_conn_params.c" />
+        <file file_name="../../../sdk_components/ble/common/ble_srv_common.c" />
+        <file file_name="../../../sdk_components/ble/ble_advertising/ble_advertising.c" />
+      </folder>
+      <folder Name="nRF_Drivers">
+        <file file_name="../../../sdk_components/libraries/uart/app_uart.c" />
+        <file file_name="../../../sdk_components/drivers_nrf/delay/nrf_delay.c" />
+        <file file_name="../../../sdk_components/drivers_nrf/common/nrf_drv_common.c" />
+        <file file_name="../../../sdk_components/drivers_nrf/gpiote/nrf_drv_gpiote.c" />
+        <file file_name="../../../sdk_components/drivers_nrf/uart/nrf_drv_uart.c" />
+        <file file_name="../../../sdk_components/drivers_nrf/pstorage/pstorage.c" />
+      </folder>
+      <folder Name="nRF_Libraries">
+        <file file_name="../../../sdk_components/libraries/button/app_button.c" />
+        <file file_name="../../../sdk_components/libraries/util/app_error.c" />
+        <file file_name="../../../sdk_components/libraries/timer/app_timer.c" />
+        <file file_name="../../../sdk_components/libraries/util/nrf_assert.c" />
+        <file file_name="../../../sdk_components/libraries/util/nrf_log.c" />
+        <file file_name="../../../sdk_components/libraries/uart/retarget.c" />
+        <file file_name="../../../sdk_components/libraries/scheduler/app_scheduler.c" />
+        <file file_name="../../../sdk_components/libraries/timer/app_timer_appsh.c" />
+        <file file_name="../../../sdk_components/libraries/util/app_error_weak.c" />
+        <file file_name="../../../sdk_components/libraries/fstorage/fstorage.c" />
+        <file file_name="../../../sdk_components/libraries/util/app_util_platform.c" />
+      </folder>
+      <folder Name="nRF_SoftDevice">
+        <file file_name="../../../sdk_components/softdevice/s132/doc/s132_nrf52_2.0.0_licence_agreement.txt" />
+        <file file_name="../../../sdk_components/softdevice/common/softdevice_handler/softdevice_handler.c" />
+      </folder>
+      <folder Name="BLE_Services">
+        <file file_name="../../../source/ble_services/ble_ecs.c" />
+      </folder>
+      <folder Name="Modules">
+        <file file_name="../../../source/modules/eddystone_ble_handler.c" />
+        <file file_name="../../../source/modules/eddystone_adv_slot.c" />
+        <file file_name="../../../source/modules/eddystone_security.c" />
+        <file file_name="../../../source/modules/eddystone_registration_ui.c" />
+        <file file_name="../../../source/modules/eddystone_flash.c" />
+        <file file_name="../../../source/modules/eddystone_advertising_manager.c" />
+        <file file_name="../../../source/modules/eddystone_tlm_manager.c" />
+      </folder>
+      <folder Name="cifra">
+        <file file_name="../../../source/crypto_libs/cifra/blockwise.c" />
+        <file file_name="../../../source/crypto_libs/cifra/cbcmac.c" />
+        <file file_name="../../../source/crypto_libs/cifra/chash.c" />
+        <file file_name="../../../source/crypto_libs/cifra/cmac.c" />
+        <file file_name="../../../source/crypto_libs/cifra/curve25519.donna.c" />
+        <file file_name="../../../source/crypto_libs/cifra/drbg.c" />
+        <file file_name="../../../source/crypto_libs/cifra/eax.c" />
+        <file file_name="../../../source/crypto_libs/cifra/gf128.c" />
+        <file file_name="../../../source/crypto_libs/cifra/hmac.c" />
+        <file file_name="../../../source/crypto_libs/cifra/modes.c" />
+        <file file_name="../../../source/crypto_libs/cifra/sha1.c" />
+        <file file_name="../../../source/crypto_libs/cifra/sha256.c" />
+        <file file_name="../../../source/crypto_libs/cifra/aes.c" />
+      </folder>
+      <folder Name="rfc6234">
+        <file file_name="../../../source/crypto_libs/rfc6234/hkdf.c" />
+        <file file_name="../../../source/crypto_libs/rfc6234/hmac.c" />
+        <file file_name="../../../source/crypto_libs/rfc6234/sha1.c" />
+        <file file_name="../../../source/crypto_libs/rfc6234/sha224-256.c" />
+        <file file_name="../../../source/crypto_libs/rfc6234/sha384-512.c" />
+        <file file_name="../../../source/crypto_libs/rfc6234/usha.c" />
+        <configuration
+          Name="Common"
+          build_object_file_name="$(IntDir)/rfc6234-$(InputName)$(OBJ)" />
+      </folder>
+      <folder Name="tiny-aes128-c">
+        <file file_name="../../../source/crypto_libs/tiny-aes128-c/aes.c">
+          <configuration
+            Name="Common"
+            build_object_file_name="$(IntDir)/tiny-aes128-c-$(InputName)$(OBJ)" />
+        </file>
+        <configuration
+          Name="Common"
+          build_object_file_name="$(IntDir)/tiny-aes128-c-$(InputName)$(OBJ)" />
+      </folder>
+      <folder Name="::CMSIS" />
+      <folder Name="::Device" />
+      <configuration Name="Common" filter="c;cpp;cxx;cc;h;s;asm;inc" />
+    </folder>
+    <folder Name="CMSIS Files">
+      <file file_name="$(DeviceHeaderFile)" />
+      <file file_name="$(DeviceSystemFile)">
+        <configuration
+          Name="Common"
+          default_code_section=".init"
+          default_const_section=".init_rodata" />
+      </file>
+    </folder>
+    <folder Name="RTT Files">
+      <file file_name="$(StudioDir)/samples/SEGGER_RTT.c" />
+      <file file_name="$(StudioDir)/samples/SEGGER_RTT.h" />
+      <file file_name="$(StudioDir)/samples/SEGGER_RTT_Conf.h" />
+      <file file_name="$(StudioDir)/samples/SEGGER_RTT_SES.c" />
+      <file file_name="../../../../nRF5_SDK_11.0.0_89a8197/external/segger_rtt/SEGGER_RTT_printf.c" />
+    </folder>
+    <folder Name="Script Files">
+      <file file_name="$(PackagesDir)/nRF/Scripts/nRF_Target.js">
+        <configuration Name="Common" file_type="Reset Script" />
+      </file>
+    </folder>
+    <folder Name="System Files">
+      <file file_name="$(StudioDir)/source/thumb_crt0.s" />
+      <file file_name="$(PackagesDir)/nRF/Source/nRF_Startup.s" />
+      <file file_name="$(DeviceVectorsFile)">
+        <configuration Name="Common" file_type="Assembly" />
+      </file>
+    </folder>
+  </project>
+  <configuration
+    Name="Debug"
+    c_preprocessor_definitions="DEBUG"
+    gcc_debugging_level="Level 3"
+    gcc_optimization_level="None" />
+  <configuration
+    Name="Release"
+    c_preprocessor_definitions="NDEBUG"
+    gcc_debugging_level="Level 1"
+    gcc_optimization_level="Level 1" />
+</solution>
