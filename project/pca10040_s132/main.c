@@ -64,8 +64,12 @@ static void power_manage(void)
 int main(void)
 {
     uint32_t err_code;
-    // Initialize.
 
+    #ifdef USE_MONITOR_MODE_DEBUG
+        NVIC_SetPriority(DebugMonitor_IRQn, 7ul); // Define USE_MONITOR_MODE_DEBUG in Preprocessor definitions to use MMD. Enabled by default in SEGGER Embedded Studio.
+    #endif
+
+    // Initialize.
     APP_SCHED_INIT(SCHED_MAX_EVENT_DATA_SIZE, SCHED_QUEUE_SIZE);
     APP_TIMER_APPSH_INIT(APP_TIMER_PRESCALER, APP_TIMER_OP_QUEUE_SIZE, true);
     err_code = bsp_init(BSP_INIT_LED, APP_TIMER_TICKS(100, APP_TIMER_PRESCALER), NULL);

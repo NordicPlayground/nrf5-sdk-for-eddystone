@@ -21,6 +21,7 @@ This is an example implementation of the Eddystone GATT Configuration Service fo
 ## Release note
 * __v0.7.1__ (may 4 2016)
     * __NEW!__ Support for SEGGER Embedded Studio, a cross-platform firmware IDE for OSX, Windows and Linux! Great for developers who do not own a Keil license or is developing on OSX/Linux.
+    * Monitor Mode Debugging enabled by default in Embedded Studio. This allows breakpoints to be taken while high priority interrupts can still be serviced (i.e. BLE connections will not be lost while halted).
 
 * __v0.7__ (April 29 2016)
 
@@ -196,6 +197,10 @@ with this:
 #endif
 ```
 *  Build and run/debug the project.
+
+#### Debugging
+*  Monitor Mode Debugging is enabled in Embedded Studio by default (can easily be added in Keil, IAR).
+*  Make sure DebugMon_Handler is defined in your system's startup files (This is done in recent releases but your system files could be old).
 
 ## How to use
 After flashing the firmware to a nRF52 DK it will automatically start broadcasting a Eddystone-URL pointing to http://www.nordicsemi.com, with LED 1 blinking. In order to configure the beacon to broadcast a different URL or a different frame type it is necessary to put the DK in configuration mode by pressing Button 1 on the DK so it starts advertising in "Connectable Mode". After that, it can be connected to nRF Beacon for Eddystone app, which allows the writing of the Lock Key to the Unlock Characteristic.
