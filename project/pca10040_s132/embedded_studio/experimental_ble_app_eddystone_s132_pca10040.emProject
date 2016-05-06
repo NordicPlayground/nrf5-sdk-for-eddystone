@@ -155,14 +155,13 @@
     <folder Name="System Files">
       <file file_name="$(StudioDir)/source/thumb_crt0.s" />
       <file file_name="$(PackagesDir)/nRF/Source/nRF_Startup.s" />
-      <file file_name="$(DeviceVectorsFile)">
-        <configuration Name="Common" file_type="Assembly" />
-      </file>
+      <file file_name="../../jlink_monitor_mode_debug/nrf52_Vectors.s" />
     </folder>
-    <folder Name="Monitor Mode Debugging Files">
-      <file file_name="../../jlink_monitor_mode_debug_code/JLINK_MONITOR_ISR_SES.s" />
-      <file file_name="../../jlink_monitor_mode_debug_code/JLINK_MONITOR.h" />
-      <file file_name="../../jlink_monitor_mode_debug_code/JLINK_MONITOR.c" />
+    <folder Name="Monitor Mode Debug Files">
+      <configuration Name="Common" build_exclude_from_build="No" />
+      <file file_name="../../jlink_monitor_mode_debug/JLINK_MONITOR_ISR_SES.s" />
+      <file file_name="../../jlink_monitor_mode_debug/JLINK_MONITOR.h" />
+      <file file_name="../../jlink_monitor_mode_debug/JLINK_MONITOR.c" />
     </folder>
   </project>
   <configuration
