@@ -242,7 +242,7 @@ The firmware is mainly broken up in several modules that each handle specific fu
 * **eddystone_flash**
   * The flash module is an abstraction of the SDKs `pstorage` library and it organizes the flash blocks (32 byte each) nicely to fit the persistent data needs of Eddystone specifically. This module is used by `eddystone_adv_slot` to preserve and restore slot configurations between reboots, and used by `eddystone_security` to store the lock key and EID information. Check out the corresponding structures in the firmware to see how the data fields in each block are populated.
 
-###### Flash blocks arragemnet
+###### Flash blocks arrangement
 
 | Block No.       | Data Type      | Corresponding Structure |
 | ------------- |:-------------:|:-------------:|
