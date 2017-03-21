@@ -1,6 +1,12 @@
 #NOTE!
-__This repository will no longer be maintained as the nRF5 SDK for Eddystone will become a part of the official nRF5 SDK in future releases.__
-This repository will be updated with information on where to find the new version once it is released.
+__This repository will no longer be maintained as the nRF5 SDK for Eddystone is now part of [nRF5 SDK version 13.0.0](http://developer.nordicsemi.com/nRF5_SDK/nRF5_SDK_v13.x.x/).__
+
+The project is found in the folder ```examples/ble_peripheral/ble_app_eddystone```
+
+Note that this version only supports nRF52 support.
+
+Experimental support for nRF51 is found in [nRF5 SDK Version 12.2.0](http://developer.nordicsemi.com/nRF5_SDK/nRF5_SDK_v12.x.x/)
+A future 12.x release will add production quality support for nRF51 for Eddystone. 
 
 # nRF5 SDK for Eddystone™
 This is an example implementation of the Eddystone GATT Configuration Service for nRF52. Support for nRF51 is scheduled for a future release. The application is intended to be used together with the open source [nRF Beacon for Eddystone](https://github.com/NordicSemiconductor/Android-nRF-Beacon-for-Eddystone) Android App. It is recommended to read the [official specification](https://github.com/google/eddystone) for Eddystone, an open beacon format from Google to get a thorough understanding. Go to [Quick start](#quick-start) if you want to experiment right away.
