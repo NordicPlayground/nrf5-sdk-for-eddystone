@@ -138,7 +138,7 @@ This is the recommended approach if you just want to get started quickly without
 
 *  Clone this repository into your preferred location (keep it close to root to avoid path too long problem on Windows, because the SDK will be downloaded via a script into the same parent directory as well)
 ```
-git clone https://github.com/NordicSemiconductor/nrf5-sdk-for-eddystone.git
+git clone https://github.com/NordicPlayground/nrf5-sdk-for-eddystone.git
 ```
 * In the `nrf5-sdk-for-eddystone\setup_scripts` folder, you will find several bash/batch scripts that will help you set up the repository with the necessary components in order for Keil to compile the project. The 2 scripts that are of interest to the user are `download_sdk_setup.sh` and `existing_sdk_setup.sh`:
     *  Run the `download_sdk_setup.sh` script if you don't already have `nRF5_SDK_11.0.0_89a8197`. This script will automatically download the required nRF5 SDK into the parent folder ( so that `nRF5_SDK_11.0.0_89a8197` lives right next to `nrf5-sdk-for-eddystone`), create necessary symlinks into the SDK for Keil to find the required components, and also clone the required third party crypto libraries from Github.
